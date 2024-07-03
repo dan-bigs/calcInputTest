@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area, Volume, and Weight Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"] {
+            margin-bottom: 10px;
+            padding: 5px;
+            width: 200px;
+        }
+        input[type="button"] {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="button"]:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        .result-item {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Area, Volume, and Weight Calculator</h2>
+    <form id="calculatorForm">
+        <label for="length">Length (mm):</label><br>
+        <input type="text" id="length" name="length"><br><br>
+        <label for="width">Width (mm):</label><br>
+        <input type="text" id="width" name="width"><br><br>
+        <label for="height">Height (mm):</label><br>
+        <input type="text" id="height" name="height"><br><br>
+        <label for="density">Density (kg/m³):</label><br>
+        <input type="text" id="density" name="density"><br><br>
+        <input type="button" value="Calculate Area, Volume, and Weight" onclick="submitForm()">
+    </form>
+    <div id="result"></div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script>
+        async function submitForm() {
+            const length = parseFloat(document.getElementById('length').value) || 0;
+            const width = parseFloat(document.getElementById('width').value) || 0;
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            const density = parseFloat(document.getElementById('density').value) || 0;
+
+            const payload = {
+                length: length,
+                width: width,
+                height: height,
+                density: density
+            };
+
+            try {
+                const response = await axios.post('https://calculation-tools-v1.azurewebsites.net/api/bearing_calculator_v1', payload);
+
+
+                if (!response.data) {
+                    throw new Error("No data received from server.");
+                }
+
+                const result = response.data;
+
+                // Display results in HTML
+                document.getElementById('result').innerHTML = `
+                    <div class="result-item"><strong>Footprint Area:</strong> ${result["Footprint Area (m²)"]} m²</div>
+                    <div class="result-item"><strong>Volume:</strong> ${result["Volume (m³)"]} m³</div>
+                    <div class="result-item"><strong>Weight:</strong> ${result["Weight (kg)"]} kg</div>
+                `;
+
+                // Generate Excel file with inputs and outputs
+                generateExcel(length, width, height, density, result);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerText = "Error: " + error.message;
+            }
+        }
+
+        function generateExcel(length, width, height, density, result) {
+            // Prepare data for Excel
+            const data = [
+                ['Parameter', 'Value'],
+                ['Length (mm)', length],
+                ['Width (mm)', width],
+                ['Height (mm)', height],
+                ['Density (kg/m³)', density],
+                [],
+                ['Results'],
+                ['Footprint Area (m²)', result["Footprint Area (m²)"]],
+                ['Volume (m³)', result["Volume (m³)"]],
+                ['Weight (kg)', result["Weight (kg)"]]
+            ];
+
+            // Create a new workbook
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+
+            // Add sheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Calculator Inputs and Results');
+
+            // Generate a download link for the Excel file
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+            const fileName = 'calculator_inputs_and_results.xlsx';
+
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                // For IE and Edge
+                window.navigator.msSaveOrOpenBlob(blob, fileName);
+            } else {
+                // For other browsers
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            }
+        }
+    </script>
+</body>
+</html>
