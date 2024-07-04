@@ -91,103 +91,100 @@
     </form>
     <div id="result"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script>
-        document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // Prevent form submission
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent form submission
 
-            const lengthMin = parseFloat(document.getElementById('lengthMin').value);
-            const lengthMax = parseFloat(document.getElementById('lengthMax').value);
-            const lengthIncrement = parseFloat(document.getElementById('lengthIncrement').value);
+        const lengthMin = parseFloat(document.getElementById('lengthMin').value);
+        const lengthMax = parseFloat(document.getElementById('lengthMax').value);
+        const lengthIncrement = parseFloat(document.getElementById('lengthIncrement').value);
 
-            const widthMin = parseFloat(document.getElementById('widthMin').value);
-            const widthMax = parseFloat(document.getElementById('widthMax').value);
-            const widthIncrement = parseFloat(document.getElementById('widthIncrement').value);
+        const widthMin = parseFloat(document.getElementById('widthMin').value);
+        const widthMax = parseFloat(document.getElementById('widthMax').value);
+        const widthIncrement = parseFloat(document.getElementById('widthIncrement').value);
 
-            const heightMin = parseFloat(document.getElementById('heightMin').value);
-            const heightMax = parseFloat(document.getElementById('heightMax').value);
-            const heightIncrement = parseFloat(document.getElementById('heightIncrement').value);
+        const heightMin = parseFloat(document.getElementById('heightMin').value);
+        const heightMax = parseFloat(document.getElementById('heightMax').value);
+        const heightIncrement = parseFloat(document.getElementById('heightIncrement').value);
 
-            const density = parseFloat(document.getElementById('density').value);
+        const density = parseFloat(document.getElementById('density').value);
 
-            const pressureMin = parseFloat(document.getElementById('pressureMin').value);
-            const pressureMax = parseFloat(document.getElementById('pressureMax').value);
+        const pressureMin = parseFloat(document.getElementById('pressureMin').value);
+        const pressureMax = parseFloat(document.getElementById('pressureMax').value);
 
-            const payload = {
-                "length": {
-                    "min": lengthMin,
-                    "max": lengthMax,
-                    "increment": lengthIncrement
-                },
-                "width": {
-                    "min": widthMin,
-                    "max": widthMax,
-                    "increment": widthIncrement
-                },
-                "height": {
-                    "min": heightMin,
-                    "max": heightMax,
-                    "increment": heightIncrement
-                },
-                "density": density,
-                "min_pressure": pressureMin,
-                "max_pressure": pressureMax
-            };
+        const payload = {
+            "length": {
+                "min": lengthMin,
+                "max": lengthMax,
+                "increment": lengthIncrement
+            },
+            "width": {
+                "min": widthMin,
+                "max": widthMax,
+                "increment": widthIncrement
+            },
+            "height": {
+                "min": heightMin,
+                "max": heightMax,
+                "increment": heightIncrement
+            },
+            "density": density,
+            "min_pressure": pressureMin,
+            "max_pressure": pressureMax
+        };
 
-            try {
-                const response = await axios.post('http://localhost:7071/api/bearing_calculator_v1', payload);
+        try {
+            const response = await axios.post('http://localhost:7071/api/bearing_calculator_v1', payload);
 
-                if (!response.data) {
-                    throw new Error("No data received from server.");
-                }
+            console.log('Response:', response); // Log the response for debugging
 
-                const result = response.data;
-
-                let tableHTML = `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Length (mm)</th>
-                                <th>Width (mm)</th>
-                                <th>Height (mm)</th>
-                                <th>Footprint Area (m²)</th>
-                                <th>Volume (m³)</th>
-                                <th>Weight (kg)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                result.forEach(item => {
-                    tableHTML += `
-                        <tr>
-                            <td>${item["Length (mm)"]}</td>
-                            <td>${item["Width (mm)"]}</td>
-                            <td>${item["Height (mm)"]}</td>
-                            <td>${item["Footprint Area (m²)"]}</td>
-                            <td>${item["Volume (m³)"]}</td>
-                            <td>${item["Weight (kg)"]}</td>
-                        </tr>
-                    `;
-                });
-
-                tableHTML += `
-                        </tbody>
-                    </table>
-                `;
-
-                const now = new Date();
-                const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-
-                document.getElementById('result').innerHTML = `<p>Last calculation: ${timestamp}</p>` + tableHTML;
-            } catch (error) {
-                console.error('Error:', error);
-                const now = new Date();
-                const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-
-                document.getElementById('result').innerText = `${timestamp} - Error: ${error.message}`;
+            if (!response.data) {
+                throw new Error("No data received from server.");
             }
-        });
-    </script>
+
+            const result = response.data;
+
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Length (mm)</th>
+                            <th>Width (mm)</th>
+                            <th>Height (mm)</th>
+                            <th>Footprint Area (m²)</th>
+                            <th>Volume (m³)</th>
+                            <th>Weight (kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            result.forEach(item => {
+                tableHTML += `
+                    <tr>
+                        <td>${item["Length (mm)"]}</td>
+                        <td>${item["Width (mm)"]}</td>
+                        <td>${item["Height (mm)"]}</td>
+                        <td>${item["Footprint Area (m²)"]}</td>
+                        <td>${item["Volume (m³)"]}</td>
+                        <td>${item["Weight (kg)"]}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('result').innerHTML = tableHTML;
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('result').innerText = "Error: " + error.message;
+        }
+    });
+</script>
+
 </body>
 </html>
