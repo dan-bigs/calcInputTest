@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area, Volume, and Weight Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"] {
+            margin-bottom: 10px;
+            padding: 5px;
+            width: 200px;
+        }
+        input[type="submit"], #exportButton {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover, #exportButton:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #exportButton {
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+    <h2>Area, Volume, and Weight Calculator</h2>
+    <form id="calculatorForm">
+        <h3>Length (mm)</h3>
+        <label for="lengthMin">Min:</label><br>
+        <input type="text" id="lengthMin" name="lengthMin"><br>
+        <label for="lengthMax">Max:</label><br>
+        <input type="text" id="lengthMax" name="lengthMax"><br>
+        <label for="lengthIncrement">Increment:</label><br>
+        <input type="text" id="lengthIncrement" name="lengthIncrement"><br><br>
+
+        <h3>Width (mm)</h3>
+        <label for="widthMin">Min:</label><br>
+        <input type="text" id="widthMin" name="widthMin"><br>
+        <label for="widthMax">Max:</label><br>
+        <input type="text" id="widthMax" name="widthMax"><br>
+        <label for="widthIncrement">Increment:</label><br>
+        <input type="text" id="widthIncrement" name="widthIncrement"><br><br>
+
+        <h3>Height (mm)</h3>
+        <label for="heightMin">Min:</label><br>
+        <input type="text" id="heightMin" name="heightMin"><br>
+        <label for="heightMax">Max:</label><br>
+        <input type="text" id="heightMax" name="heightMax"><br>
+        <label for="heightIncrement">Increment:</label><br>
+        <input type="text" id="heightIncrement" name="heightIncrement"><br><br>
+
+        <label for="density">Density (kg/m³):</label><br>
+        <input type="text" id="density" name="density"><br><br>
+        <input type="submit" value="Calculate Area, Volume, and Weight">
+    </form>
+    <div id="result"></div>
+    <button id="exportButton">Export to Excel</button>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script>
+        let latestResult = null; // To store the latest result for exporting
+
+        document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent form submission
+
+            // Retrieve input values
+            const lengthMin = parseFloat(document.getElementById('lengthMin').value) || 0;
+            const lengthMax = parseFloat(document.getElementById('lengthMax').value) || 0;
+            const lengthIncrement = parseFloat(document.getElementById('lengthIncrement').value) || 1;
+
+            const widthMin = parseFloat(document.getElementById('widthMin').value) || 0;
+            const widthMax = parseFloat(document.getElementById('widthMax').value) || 0;
+            const widthIncrement = parseFloat(document.getElementById('widthIncrement').value) || 1;
+
+            const heightMin = parseFloat(document.getElementById('heightMin').value) || 0;
+            const heightMax = parseFloat(document.getElementById('heightMax').value) || 0;
+            const heightIncrement = parseFloat(document.getElementById('heightIncrement').value) || 1;
+
+            const density = parseFloat(document.getElementById('density').value) || 0;
+
+            // Construct payload for POST request
+            const payload = {
+                length: {
+                    min: lengthMin,
+                    max: lengthMax,
+                    increment: lengthIncrement
+                },
+                width: {
+                    min: widthMin,
+                    max: widthMax,
+                    increment: widthIncrement
+                },
+                height: {
+                    min: heightMin,
+                    max: heightMax,
+                    increment: heightIncrement
+                },
+                density: density
+            };
+
+            try {
+                // Make POST request to backend API
+                const response = await axios.post('http://localhost:7071/api/bearing_calculator_v1', payload);
+
+                if (!response.data) {
+                    throw new Error("No data received from server.");
+                }
+
+                const result = response.data;
+
+                // Store result for later use in export
+                latestResult = { payload, result };
+
+                // Display results in HTML table
+                let tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Length (mm)</th>
+                                <th>Width (mm)</th>
+                                <th>Height (mm)</th>
+                                <th>Footprint Area (m²)</th>
+                                <th>Volume (m³)</th>
+                                <th>Weight (kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                result.forEach(item => {
+                    tableHTML += `
+                        <tr>
+                            <td>${item.length}</td>
+                            <td>${item.width}</td>
+                            <td>${item.height}</td>
+                            <td>${item["Footprint Area (m²)"]}</td>
+                            <td>${item["Volume (m³)"]}</td>
+                            <td>${item["Weight (kg)"]}</td>
+                        </tr>
+                    `;
+                });
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('result').innerHTML = tableHTML;
+
+                // Show the export button
+                document.getElementById('exportButton').style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerText = "Error: " + error.message;
+            }
+        });
+
+        document.getElementById('exportButton').addEventListener('click', function() {
+            if (latestResult) {
+                generateExcel(latestResult.payload, latestResult.result);
+            }
+        });
+
+        function generateExcel(payload, result) {
+            // Prepare data for Excel
+            const data = [
+                ['Parameter', 'Value'],
+                ['Length Min (mm)', payload.length.min],
+                ['Length Max (mm)', payload.length.max],
+                ['Length Increment (mm)', payload.length.increment],
+                ['Width Min (mm)', payload.width.min],
+                ['Width Max (mm)', payload.width.max],
+                ['Width Increment (mm)', payload.width.increment],
+                ['Height Min (mm)', payload.height.min],
+                ['Height Max (mm)', payload.height.max],
+                ['Height Increment (mm)', payload.height.increment],
+                ['Density (kg/m³)', payload.density],
+                [],
+                ['Results']
+            ];
+
+            result.forEach(item => {
+                data.push(
+                    [],
+                    ['Length (mm)', item.length],
+                    ['Width (mm)', item.width],
+                    ['Height (mm)', item.height],
+                    ['Footprint Area (m²)', item["Footprint Area (m²)"]],
+                    ['Volume (m³)', item["Volume (m³)"]],
+                    ['Weight (kg)', item["Weight (kg)"]]
+                );
+            });
+
+            // Create a new workbook
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+
+            // Add sheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Calculator Inputs and Results');
+
+            // Generate a download link for the Excel file
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+            const fileName = 'calculator_inputs_and_results.xlsx';
+
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                // For IE and Edge
+                window.navigator.msSaveOrOpenBlob(blob, fileName);
+            } else {
+                // For other browsers
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            }
+        }
+    </script>
+</body>
+</html>
