@@ -47,6 +47,19 @@
             border-radius: 5px;
             background-color: #f9f9f9;
         }
+        .progress-bar {
+            display: none;
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .progress-bar div {
+            height: 20px;
+            width: 0;
+            background-color: #28a745;
+        }
     </style>
 </head>
 <body>
@@ -56,51 +69,54 @@
     <form id="calculatorForm">
         <div class="form-group">
             <label for="length_min">Length Min:</label>
-            <input type="number" id="length_min" name="length_min" required>
+            <input type="number" id="length_min" name="length_min" step="any" required>
         </div>
         <div class="form-group">
             <label for="length_max">Length Max:</label>
-            <input type="number" id="length_max" name="length_max" required>
+            <input type="number" id="length_max" name="length_max" step="any" required>
         </div>
         <div class="form-group">
             <label for="length_increment">Length Increment:</label>
-            <input type="number" id="length_increment" name="length_increment" required>
+            <input type="number" id="length_increment" name="length_increment" step="any" required>
         </div>
         <div class="form-group">
             <label for="width_min">Width Min:</label>
-            <input type="number" id="width_min" name="width_min" required>
+            <input type="number" id="width_min" name="width_min" step="any" required>
         </div>
         <div class="form-group">
             <label for="width_max">Width Max:</label>
-            <input type="number" id="width_max" name="width_max" required>
+            <input type="number" id="width_max" name="width_max" step="any" required>
         </div>
         <div class="form-group">
             <label for="width_increment">Width Increment:</label>
-            <input type="number" id="width_increment" name="width_increment" required>
+            <input type="number" id="width_increment" name="width_increment" step="any" required>
         </div>
         <div class="form-group">
             <label for="height_min">Height Min:</label>
-            <input type="number" id="height_min" name="height_min" required>
+            <input type="number" id="height_min" name="height_min" step="any" required>
         </div>
         <div class="form-group">
             <label for="height_max">Height Max:</label>
-            <input type="number" id="height_max" name="height_max" required>
+            <input type="number" id="height_max" name="height_max" step="any" required>
         </div>
         <div class="form-group">
             <label for="height_increment">Height Increment:</label>
-            <input type="number" id="height_increment" name="height_increment" required>
+            <input type="number" id="height_increment" name="height_increment" step="any" required>
         </div>
         <div class="form-group">
             <label for="density">Density:</label>
-            <input type="number" id="density" name="density" required>
+            <input type="number" id="density" name="density" step="any" required>
         </div>
         <div class="form-group">
             <label for="min_pressure">Min Pressure:</label>
-            <input type="number" id="min_pressure" name="min_pressure" required>
+            <input type="number" id="min_pressure" name="min_pressure" step="any" required>
         </div>
         <div class="form-group">
             <label for="max_pressure">Max Pressure:</label>
-            <input type="number" id="max_pressure" name="max_pressure" required>
+            <input type="number" id="max_pressure" name="max_pressure" step="any" required>
+        </div>
+        <div class="progress-bar" id="progressBar">
+            <div></div>
         </div>
         <button type="submit" class="btn">Calculate</button>
     </form>
@@ -110,6 +126,12 @@
 <script>
     document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
         event.preventDefault();
+
+        // Show progress bar
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.display = 'block';
+        const progress = progressBar.querySelector('div');
+        progress.style.width = '0%';
 
         const formData = {
             length: {
@@ -141,16 +163,28 @@
                 body: JSON.stringify(formData)
             });
 
+            // Update progress bar
+            progress.style.width = '50%';
+
             if (response.ok) {
                 const result = await response.json();
                 document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+                progress.style.width = '100%';
             } else {
                 const errorText = await response.text();
                 document.getElementById('result').innerText = `Error: ${errorText}`;
+                progress.style.width = '100%';
             }
         } catch (error) {
             document.getElementById('result').innerText = `Error: ${error.message}`;
+            progress.style.width = '100%';
         }
+
+        // Hide progress bar after completion
+        setTimeout(() => {
+            progressBar.style.display = 'none';
+            progress.style.width = '0%';
+        }, 2000);
     });
 </script>
 
