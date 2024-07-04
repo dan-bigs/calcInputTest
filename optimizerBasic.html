@@ -135,7 +135,7 @@
             };
 
             try {
-                const response = await axios.post('http://localhost:7071/api/bearing_calculator_v1', payload);
+                const response = await axios.post('http://<your_azure_function_url>/api/bearing_calculator_v1', payload);
 
                 console.log('Server response:', response.data); // Log the server response
 
@@ -157,10 +157,10 @@
                         row.insertCell().appendChild(document.createTextNode(item.length));
                         row.insertCell().appendChild(document.createTextNode(item.width));
                         row.insertCell().appendChild(document.createTextNode(item.height));
-                        row.insertCell().appendChild(document.createTextNode(item.footprintArea));
-                        row.insertCell().appendChild(document.createTextNode(item.volume));
-                        row.insertCell().appendChild(document.createTextNode(item.weight));
-                        row.insertCell().appendChild(document.createTextNode(item.pressure));
+                        row.insertCell().appendChild(document.createTextNode(item.area_m2));
+                        row.insertCell().appendChild(document.createTextNode(item.volume_m3));
+                        row.insertCell().appendChild(document.createTextNode(item.weight_kg));
+                        row.insertCell().appendChild(document.createTextNode(item.pressure_mpa));
                     });
 
                     resultDiv.appendChild(table);
