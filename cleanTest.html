@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bearing Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Bearing Calculator</h1>
+    <form id="calculatorForm">
+        <div class="form-group">
+            <label for="length_min">Length Min:</label>
+            <input type="number" id="length_min" name="length_min" required>
+        </div>
+        <div class="form-group">
+            <label for="length_max">Length Max:</label>
+            <input type="number" id="length_max" name="length_max" required>
+        </div>
+        <div class="form-group">
+            <label for="length_increment">Length Increment:</label>
+            <input type="number" id="length_increment" name="length_increment" required>
+        </div>
+        <div class="form-group">
+            <label for="width_min">Width Min:</label>
+            <input type="number" id="width_min" name="width_min" required>
+        </div>
+        <div class="form-group">
+            <label for="width_max">Width Max:</label>
+            <input type="number" id="width_max" name="width_max" required>
+        </div>
+        <div class="form-group">
+            <label for="width_increment">Width Increment:</label>
+            <input type="number" id="width_increment" name="width_increment" required>
+        </div>
+        <div class="form-group">
+            <label for="height_min">Height Min:</label>
+            <input type="number" id="height_min" name="height_min" required>
+        </div>
+        <div class="form-group">
+            <label for="height_max">Height Max:</label>
+            <input type="number" id="height_max" name="height_max" required>
+        </div>
+        <div class="form-group">
+            <label for="height_increment">Height Increment:</label>
+            <input type="number" id="height_increment" name="height_increment" required>
+        </div>
+        <div class="form-group">
+            <label for="density">Density:</label>
+            <input type="number" id="density" name="density" required>
+        </div>
+        <div class="form-group">
+            <label for="min_pressure">Min Pressure:</label>
+            <input type="number" id="min_pressure" name="min_pressure" required>
+        </div>
+        <div class="form-group">
+            <label for="max_pressure">Max Pressure:</label>
+            <input type="number" id="max_pressure" name="max_pressure" required>
+        </div>
+        <button type="submit" class="btn">Calculate</button>
+    </form>
+    <div id="result" class="result"></div>
+</div>
+
+<script>
+    document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const formData = {
+            length: {
+                min: parseFloat(document.getElementById('length_min').value),
+                max: parseFloat(document.getElementById('length_max').value),
+                increment: parseFloat(document.getElementById('length_increment').value)
+            },
+            width: {
+                min: parseFloat(document.getElementById('width_min').value),
+                max: parseFloat(document.getElementById('width_max').value),
+                increment: parseFloat(document.getElementById('width_increment').value)
+            },
+            height: {
+                min: parseFloat(document.getElementById('height_min').value),
+                max: parseFloat(document.getElementById('height_max').value),
+                increment: parseFloat(document.getElementById('height_increment').value)
+            },
+            density: parseFloat(document.getElementById('density').value),
+            min_pressure: parseFloat(document.getElementById('min_pressure').value),
+            max_pressure: parseFloat(document.getElementById('max_pressure').value)
+        };
+
+        try {
+            const response = await fetch('http://<your-function-app-name>.azurewebsites.net/api/bearing_calculator_v1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+            } else {
+                const errorText = await response.text();
+                document.getElementById('result').innerText = `Error: ${errorText}`;
+            }
+        } catch (error) {
+            document.getElementById('result').innerText = `Error: ${error.message}`;
+        }
+    });
+</script>
+
+</body>
+</html>
