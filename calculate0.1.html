@@ -23,14 +23,14 @@
             padding: 5px;
             width: 200px;
         }
-        input[type="submit"] {
+        input[type="submit"], #exportButton {
             padding: 10px 15px;
             background-color: #4CAF50;
             color: white;
             border: none;
             cursor: pointer;
         }
-        input[type="submit"]:hover {
+        input[type="submit"]:hover, #exportButton:hover {
             background-color: #45a049;
         }
         #result {
@@ -38,6 +38,9 @@
         }
         .result-item {
             margin-bottom: 10px;
+        }
+        #exportButton {
+            display: none; /* Hidden by default */
         }
     </style>
 </head>
@@ -55,9 +58,12 @@
         <input type="submit" value="Calculate Area, Volume, and Weight">
     </form>
     <div id="result"></div>
+    <button id="exportButton">Export to Excel</button>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
     <script>
+        let latestResult = null; // To store the latest result for exporting
+
         document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
             event.preventDefault(); // Prevent form submission
 
@@ -82,6 +88,9 @@
 
                 const result = response.data;
 
+                // Store result for later use in export
+                latestResult = { length, width, height, density, result };
+
                 // Display results in HTML
                 document.getElementById('result').innerHTML = `
                     <div class="result-item"><strong>Footprint Area:</strong> ${result["Footprint Area (m²)"]} m²</div>
@@ -89,11 +98,17 @@
                     <div class="result-item"><strong>Weight:</strong> ${result["Weight (kg)"]} kg</div>
                 `;
 
-                // Generate Excel file with inputs and outputs
-                generateExcel(length, width, height, density, result);
+                // Show the export button
+                document.getElementById('exportButton').style.display = 'block';
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('result').innerText = "Error: " + error.message;
+            }
+        });
+
+        document.getElementById('exportButton').addEventListener('click', function() {
+            if (latestResult) {
+                generateExcel(latestResult.length, latestResult.width, latestResult.height, latestResult.density, latestResult.result);
             }
         });
 
