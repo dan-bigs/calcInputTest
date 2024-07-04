@@ -135,7 +135,7 @@
             };
 
             try {
-                const response = await axios.post('http://<your_azure_function_url>/api/bearing_calculator_v1', payload);
+                const response = await axios.post('http://localhost:7071/api/bearing_calculator_v1', payload);
 
                 console.log('Server response:', response.data); // Log the server response
 
