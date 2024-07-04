@@ -129,7 +129,7 @@
             };
 
             try {
-                const response = await axios.post('https://calculation-tools-v1.azurewebsites.net/api/bearing_calculator_v1', payload);
+                const response = await axios.post('http://localhost:7071/api/bearing_calculator_v1', payload);
 
                 if (!response.data) {
                     throw new Error("No data received from server.");
