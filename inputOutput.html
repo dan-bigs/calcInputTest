@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bearing Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .progress-bar {
+            display: none;
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .progress-bar div {
+            height: 20px;
+            width: 0;
+            background-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Bearing Calculator</h1>
+    <form id="calculatorForm">
+        <div class="form-group">
+            <label for="length_min">Length Min:</label>
+            <input type="number" id="length_min" name="length_min" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="length_max">Length Max:</label>
+            <input type="number" id="length_max" name="length_max" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="length_increment">Length Increment:</label>
+            <input type="number" id="length_increment" name="length_increment" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="width_min">Width Min:</label>
+            <input type="number" id="width_min" name="width_min" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="width_max">Width Max:</label>
+            <input type="number" id="width_max" name="width_max" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="width_increment">Width Increment:</label>
+            <input type="number" id="width_increment" name="width_increment" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="height_min">Height Min:</label>
+            <input type="number" id="height_min" name="height_min" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="height_max">Height Max:</label>
+            <input type="number" id="height_max" name="height_max" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="height_increment">Height Increment:</label>
+            <input type="number" id="height_increment" name="height_increment" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="density">Density:</label>
+            <input type="number" id="density" name="density" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="min_pressure">Min Pressure:</label>
+            <input type="number" id="min_pressure" name="min_pressure" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="max_pressure">Max Pressure:</label>
+            <input type="number" id="max_pressure" name="max_pressure" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="load_kn">Load (kN):</label>
+            <input type="number" id="load_kn" name="load_kn" step="any" required>
+        </div>
+        <div class="form-group">
+            <label for="movement_mm">Movement (mm):</label>
+            <input type="number" id="movement_mm" name="movement_mm" step="any" required>
+        </div>
+        <div class="progress-bar" id="progressBar">
+            <div></div>
+        </div>
+        <button type="submit" class="btn">Calculate</button>
+    </form>
+    <div id="result" class="result"></div>
+</div>
+
+<script>
+    document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        // Show progress bar
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.display = 'block';
+        const progress = progressBar.querySelector('div');
+        progress.style.width = '0%';
+
+        const formData = {
+            length: {
+                min: parseFloat(document.getElementById('length_min').value),
+                max: parseFloat(document.getElementById('length_max').value),
+                increment: parseFloat(document.getElementById('length_increment').value)
+            },
+            width: {
+                min: parseFloat(document.getElementById('width_min').value),
+                max: parseFloat(document.getElementById('width_max').value),
+                increment: parseFloat(document.getElementById('width_increment').value)
+            },
+            height: {
+                min: parseFloat(document.getElementById('height_min').value),
+                max: parseFloat(document.getElementById('height_max').value),
+                increment: parseFloat(document.getElementById('height_increment').value)
+            },
+            density: parseFloat(document.getElementById('density').value),
+            min_pressure: parseFloat(document.getElementById('min_pressure').value),
+            max_pressure: parseFloat(document.getElementById('max_pressure').value),
+            load_kn: parseFloat(document.getElementById('load_kn').value),
+            movement_mm: parseFloat(document.getElementById('movement_mm').value)
+        };
+
+        try {
+            const response = await fetch('http://localhost:7071/api/bearing_calculator_v1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            // Update progress bar
+            progress.style.width = '50%';
+
+            if (response.ok) {
+                const result = await response.json();
+                document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+                progress.style.width = '100%';
+            } else {
+                const errorText = await response.text();
+                document.getElementById('result').innerText = `Error: ${errorText}`;
+                progress.style.width = '100%';
+            }
+        } catch (error) {
+            document.getElementById('result').innerText = `Error: ${error.message}`;
+            progress.style.width = '100%';
+        }
+
+        // Hide progress bar after completion
+        setTimeout(() => {
+            progressBar.style.display = 'none';
+            progress.style.width = '0%';
+        }, 2000);
+    });
+</script>
+
+</body>
+</html>
