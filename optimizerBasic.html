@@ -176,10 +176,16 @@
                     </table>
                 `;
 
-                document.getElementById('result').innerHTML = tableHTML;
+                const now = new Date();
+                const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+
+                document.getElementById('result').innerHTML = `<p>Last calculation: ${timestamp}</p>` + tableHTML;
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('result').innerText = "Error: " + error.message;
+                const now = new Date();
+                const timestamp = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+
+                document.getElementById('result').innerText = `${timestamp} - Error: ${error.message}`;
             }
         });
     </script>
