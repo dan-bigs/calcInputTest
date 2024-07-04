@@ -83,6 +83,13 @@
 
         <label for="density">Density (kg/m³):</label><br>
         <input type="text" id="density" name="density"><br><br>
+
+        <h3>Pressure (MPa)</h3>
+        <label for="pressureMin">Min:</label><br>
+        <input type="text" id="pressureMin" name="pressureMin"><br>
+        <label for="pressureMax">Max:</label><br>
+        <input type="text" id="pressureMax" name="pressureMax"><br><br>
+
         <input type="submit" value="Calculate Area, Volume, and Weight">
     </form>
     <div id="result"></div>
@@ -95,7 +102,6 @@
         document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
             event.preventDefault(); // Prevent form submission
 
-            // Retrieve input values
             const lengthMin = parseFloat(document.getElementById('lengthMin').value) || 0;
             const lengthMax = parseFloat(document.getElementById('lengthMax').value) || 0;
             const lengthIncrement = parseFloat(document.getElementById('lengthIncrement').value) || 1;
@@ -110,7 +116,9 @@
 
             const density = parseFloat(document.getElementById('density').value) || 0;
 
-            // Construct payload for POST request
+            const pressureMin = parseFloat(document.getElementById('pressureMin').value) || 0;
+            const pressureMax = parseFloat(document.getElementById('pressureMax').value) || 0;
+
             const payload = {
                 length: {
                     min: lengthMin,
@@ -127,11 +135,14 @@
                     max: heightMax,
                     increment: heightIncrement
                 },
-                density: density
+                density: density,
+                pressure: {
+                    min: pressureMin,
+                    max: pressureMax
+                }
             };
 
             try {
-                // Make POST request to backend API
                 const response = await axios.post('http://localhost:7071/api/bearing_calculator_v1', payload);
 
                 if (!response.data) {
@@ -205,6 +216,8 @@
                 ['Height Max (mm)', payload.height.max],
                 ['Height Increment (mm)', payload.height.increment],
                 ['Density (kg/m³)', payload.density],
+                ['Pressure Min (MPa)', payload.pressure.min],
+                ['Pressure Max (MPa)', payload.pressure.max],
                 [],
                 ['Results']
             ];
