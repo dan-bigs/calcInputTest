@@ -36,8 +36,18 @@
         #result {
             margin-top: 20px;
         }
-        .result-item {
-            margin-bottom: 10px;
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
         }
         #exportButton {
             display: none; /* Hidden by default */
@@ -119,7 +129,7 @@
             };
 
             try {
-                const response = await axios.post('http://localhost:7071/api/bearing_calculator_v1', payload);
+                const response = await axios.post('https://calculation-tools-v1.azurewebsites.net/api/bearing_calculator_v1', payload);
 
                 if (!response.data) {
                     throw new Error("No data received from server.");
@@ -130,21 +140,39 @@
                 // Store result for later use in export
                 latestResult = { payload, result };
 
-                // Display results in HTML
-                let resultHTML = '';
+                // Display results in HTML table
+                let tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Length (mm)</th>
+                                <th>Width (mm)</th>
+                                <th>Height (mm)</th>
+                                <th>Footprint Area (m²)</th>
+                                <th>Volume (m³)</th>
+                                <th>Weight (kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
                 result.forEach(item => {
-                    resultHTML += `
-                        <div class="result-item"><strong>Length:</strong> ${item.length} mm</div>
-                        <div class="result-item"><strong>Width:</strong> ${item.width} mm</div>
-                        <div class="result-item"><strong>Height:</strong> ${item.height} mm</div>
-                        <div class="result-item"><strong>Footprint Area:</strong> ${item["Footprint Area (m²)"]} m²</div>
-                        <div class="result-item"><strong>Volume:</strong> ${item["Volume (m³)"]} m³</div>
-                        <div class="result-item"><strong>Weight:</strong> ${item["Weight (kg)"]} kg</div>
-                        <hr>
+                    tableHTML += `
+                        <tr>
+                            <td>${item.length}</td>
+                            <td>${item.width}</td>
+                            <td>${item.height}</td>
+                            <td>${item["Footprint Area (m²)"]}</td>
+                            <td>${item["Volume (m³)"]}</td>
+                            <td>${item["Weight (kg)"]}</td>
+                        </tr>
                     `;
                 });
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
 
-                document.getElementById('result').innerHTML = resultHTML;
+                document.getElementById('result').innerHTML = tableHTML;
 
                 // Show the export button
                 document.getElementById('exportButton').style.display = 'block';
