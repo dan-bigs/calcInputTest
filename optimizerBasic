@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bearing Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"] {
+            margin-bottom: 10px;
+            padding: 5px;
+            width: 200px;
+        }
+        input[type="submit"] {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h2>Bearing Calculator</h2>
+    <form id="calculatorForm">
+        <h3>Length (mm)</h3>
+        <label for="lengthMin">Min:</label><br>
+        <input type="text" id="lengthMin" name="lengthMin" required><br>
+        <label for="lengthMax">Max:</label><br>
+        <input type="text" id="lengthMax" name="lengthMax" required><br>
+        <label for="lengthIncrement">Increment:</label><br>
+        <input type="text" id="lengthIncrement" name="lengthIncrement" required><br><br>
+
+        <h3>Width (mm)</h3>
+        <label for="widthMin">Min:</label><br>
+        <input type="text" id="widthMin" name="widthMin" required><br>
+        <label for="widthMax">Max:</label><br>
+        <input type="text" id="widthMax" name="widthMax" required><br>
+        <label for="widthIncrement">Increment:</label><br>
+        <input type="text" id="widthIncrement" name="widthIncrement" required><br><br>
+
+        <h3>Height (mm)</h3>
+        <label for="heightMin">Min:</label><br>
+        <input type="text" id="heightMin" name="heightMin" required><br>
+        <label for="heightMax">Max:</label><br>
+        <input type="text" id="heightMax" name="heightMax" required><br>
+        <label for="heightIncrement">Increment:</label><br>
+        <input type="text" id="heightIncrement" name="heightIncrement" required><br><br>
+
+        <label for="density">Density (kg/m³):</label><br>
+        <input type="text" id="density" name="density" required><br><br>
+
+        <h3>Pressure (MPa)</h3>
+        <label for="pressureMin">Min:</label><br>
+        <input type="text" id="pressureMin" name="pressureMin" required><br>
+        <label for="pressureMax">Max:</label><br>
+        <input type="text" id="pressureMax" name="pressureMax" required><br><br>
+
+        <input type="submit" value="Calculate">
+    </form>
+    <div id="result"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent form submission
+
+            const lengthMin = parseFloat(document.getElementById('lengthMin').value);
+            const lengthMax = parseFloat(document.getElementById('lengthMax').value);
+            const lengthIncrement = parseFloat(document.getElementById('lengthIncrement').value);
+
+            const widthMin = parseFloat(document.getElementById('widthMin').value);
+            const widthMax = parseFloat(document.getElementById('widthMax').value);
+            const widthIncrement = parseFloat(document.getElementById('widthIncrement').value);
+
+            const heightMin = parseFloat(document.getElementById('heightMin').value);
+            const heightMax = parseFloat(document.getElementById('heightMax').value);
+            const heightIncrement = parseFloat(document.getElementById('heightIncrement').value);
+
+            const density = parseFloat(document.getElementById('density').value);
+
+            const pressureMin = parseFloat(document.getElementById('pressureMin').value);
+            const pressureMax = parseFloat(document.getElementById('pressureMax').value);
+
+            const payload = {
+                "length": {
+                    "min": lengthMin,
+                    "max": lengthMax,
+                    "increment": lengthIncrement
+                },
+                "width": {
+                    "min": widthMin,
+                    "max": widthMax,
+                    "increment": widthIncrement
+                },
+                "height": {
+                    "min": heightMin,
+                    "max": heightMax,
+                    "increment": heightIncrement
+                },
+                "density": density,
+                "min_pressure": pressureMin,
+                "max_pressure": pressureMax
+            };
+
+            try {
+                const response = await axios.post('http://localhost:7071/api/bearing_calculator_v1', payload);
+
+                if (!response.data) {
+                    throw new Error("No data received from server.");
+                }
+
+                const result = response.data;
+
+                let tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Length (mm)</th>
+                                <th>Width (mm)</th>
+                                <th>Height (mm)</th>
+                                <th>Footprint Area (m²)</th>
+                                <th>Volume (m³)</th>
+                                <th>Weight (kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                result.forEach(item => {
+                    tableHTML += `
+                        <tr>
+                            <td>${item["Length (mm)"]}</td>
+                            <td>${item["Width (mm)"]}</td>
+                            <td>${item["Height (mm)"]}</td>
+                            <td>${item["Footprint Area (m²)"]}</td>
+                            <td>${item["Volume (m³)"]}</td>
+                            <td>${item["Weight (kg)"]}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('result').innerHTML = tableHTML;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerText = "Error: " + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
