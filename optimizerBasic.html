@@ -135,58 +135,43 @@
             };
 
             try {
-                const response = await axios.post('http://localhost:7071/api/bearing_calculator_v1', payload);
+                const response = await axios.post('http://<your_azure_function_url>/api/bearing_calculator_v1', payload);
 
-                console.log('Response:', response); // Log the response for debugging
+                console.log('Server response:', response.data); // Log the server response
 
-                if (!response.data) {
-                    throw new Error("No data received from server.");
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = '<h3>Results:</h3>';
+
+                if (Array.isArray(response.data)) {
+                    const table = document.createElement('table');
+                    const headerRow = table.insertRow();
+                    const headers = ['Length', 'Width', 'Height', 'Footprint Area (m²)', 'Volume (m³)', 'Weight (kg)', 'Pressure (MPa)'];
+                    headers.forEach(headerText => {
+                        const th = document.createElement('th');
+                        th.appendChild(document.createTextNode(headerText));
+                        headerRow.appendChild(th);
+                    });
+
+                    response.data.forEach(item => {
+                        const row = table.insertRow();
+                        row.insertCell().appendChild(document.createTextNode(item.length));
+                        row.insertCell().appendChild(document.createTextNode(item.width));
+                        row.insertCell().appendChild(document.createTextNode(item.height));
+                        row.insertCell().appendChild(document.createTextNode(item.footprintArea));
+                        row.insertCell().appendChild(document.createTextNode(item.volume));
+                        row.insertCell().appendChild(document.createTextNode(item.weight));
+                        row.insertCell().appendChild(document.createTextNode(item.pressure));
+                    });
+
+                    resultDiv.appendChild(table);
+                } else {
+                    resultDiv.innerHTML += `<p>${response.data}</p>`;
                 }
 
-                const result = response.data;
-
-                if (!Array.isArray(result)) {
-                    throw new Error("Expected an array from the server but got something else.");
-                }
-
-                let tableHTML = `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Length (mm)</th>
-                                <th>Width (mm)</th>
-                                <th>Height (mm)</th>
-                                <th>Footprint Area (m²)</th>
-                                <th>Volume (m³)</th>
-                                <th>Weight (kg)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                result.forEach(item => {
-                    tableHTML += `
-                        <tr>
-                            <td>${item["Length (mm)"]}</td>
-                            <td>${item["Width (mm)"]}</td>
-                            <td>${item["Height (mm)"]}</td>
-                            <td>${item["Footprint Area (m²)"]}</td>
-                            <td>${item["Volume (m³)"]}</td>
-                            <td>${item["Weight (kg)"]}</td>
-                        </tr>
-                    `;
-                });
-
-                tableHTML += `
-                        </tbody>
-                    </table>
-                `;
-
-                document.getElementById('result').innerHTML = tableHTML;
             } catch (error) {
-                console.error('Error:', error);
-                const timestamp = new Date().toLocaleString();
-                document.getElementById('result').innerText = `Error (${timestamp}): ${error.message}`;
+                console.error('Error:', error.response ? error.response.data : error.message);
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.response ? error.response.data : error.message}</p>`;
             }
         });
     </script>
