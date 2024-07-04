@@ -46,19 +46,7 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             background-color: #f9f9f9;
-        }
-        .progress-bar {
-            display: none;
-            width: 100%;
-            background-color: #f3f3f3;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-        .progress-bar div {
-            height: 20px;
-            width: 0;
-            background-color: #28a745;
+            white-space: pre-wrap;
         }
     </style>
 </head>
@@ -69,63 +57,61 @@
     <form id="calculatorForm">
         <div class="form-group">
             <label for="length_min">Length Min:</label>
-            <input type="number" id="length_min" name="length_min" step="any" required>
+            <input type="number" id="length_min" name="length_min" step="any" required value="10">
         </div>
         <div class="form-group">
             <label for="length_max">Length Max:</label>
-            <input type="number" id="length_max" name="length_max" step="any" required>
+            <input type="number" id="length_max" name="length_max" step="any" required value="100">
         </div>
         <div class="form-group">
             <label for="length_increment">Length Increment:</label>
-            <input type="number" id="length_increment" name="length_increment" step="any" required>
+            <input type="number" id="length_increment" name="length_increment" step="any" required value="10">
         </div>
         <div class="form-group">
             <label for="width_min">Width Min:</label>
-            <input type="number" id="width_min" name="width_min" step="any" required>
+            <input type="number" id="width_min" name="width_min" step="any" required value="5">
         </div>
         <div class="form-group">
             <label for="width_max">Width Max:</label>
-            <input type="number" id="width_max" name="width_max" step="any" required>
+            <input type="number" id="width_max" name="width_max" step="any" required value="50">
         </div>
         <div class="form-group">
             <label for="width_increment">Width Increment:</label>
-            <input type="number" id="width_increment" name="width_increment" step="any" required>
+            <input type="number" id="width_increment" name="width_increment" step="any" required value="5">
         </div>
         <div class="form-group">
             <label for="height_min">Height Min:</label>
-            <input type="number" id="height_min" name="height_min" step="any" required>
+            <input type="number" id="height_min" name="height_min" step="any" required value="1">
         </div>
         <div class="form-group">
             <label for="height_max">Height Max:</label>
-            <input type="number" id="height_max" name="height_max" step="any" required>
+            <input type="number" id="height_max" name="height_max" step="any" required value="10">
         </div>
         <div class="form-group">
             <label for="height_increment">Height Increment:</label>
-            <input type="number" id="height_increment" name="height_increment" step="any" required>
+            <input type="number" id="height_increment" name="height_increment" step="any" required value="1">
         </div>
         <div class="form-group">
             <label for="density">Density:</label>
-            <input type="number" id="density" name="density" step="any" required>
+            <input type="number" id="density" name="density" step="any" required value="7850">
         </div>
         <div class="form-group">
             <label for="min_pressure">Min Pressure:</label>
-            <input type="number" id="min_pressure" name="min_pressure" step="any" required>
+            <input type="number" id="min_pressure" name="min_pressure" step="any" required value="10">
         </div>
         <div class="form-group">
             <label for="max_pressure">Max Pressure:</label>
-            <input type="number" id="max_pressure" name="max_pressure" step="any" required>
+            <input type="number" id="max_pressure" name="max_pressure" step="any" required value="50">
         </div>
         <div class="form-group">
             <label for="load_kn">Load (kN):</label>
-            <input type="number" id="load_kn" name="load_kn" step="any" required>
+            <input type="number" id="load_kn" name="load_kn" step="any" required value="20">
         </div>
         <div class="form-group">
             <label for="movement_mm">Movement (mm):</label>
-            <input type="number" id="movement_mm" name="movement_mm" step="any" required>
+            <input type="number" id="movement_mm" name="movement_mm" step="any" required value="5">
         </div>
-        <div class="progress-bar" id="progressBar">
-            <div></div>
-        </div>
+        <div id="loader" class="loader" style="display: none;"></div>
         <button type="submit" class="btn">Calculate</button>
     </form>
     <div id="result" class="result"></div>
@@ -135,11 +121,9 @@
     document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
         event.preventDefault();
 
-        // Show progress bar
-        const progressBar = document.getElementById('progressBar');
-        progressBar.style.display = 'block';
-        const progress = progressBar.querySelector('div');
-        progress.style.width = '0%';
+        // Show loading spinner
+        const loader = document.getElementById('loader');
+        loader.style.display = 'block';
 
         const formData = {
             length: {
@@ -173,28 +157,20 @@
                 body: JSON.stringify(formData)
             });
 
-            // Update progress bar
-            progress.style.width = '50%';
-
-            if (response.ok) {
-                const result = await response.json();
-                document.getElementById('result').innerText = JSON.stringify(result, null, 2);
-                progress.style.width = '100%';
-            } else {
-                const errorText = await response.text();
-                document.getElementById('result').innerText = `Error: ${errorText}`;
-                progress.style.width = '100%';
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
-        } catch (error) {
-            document.getElementById('result').innerText = `Error: ${error.message}`;
-            progress.style.width = '100%';
-        }
 
-        // Hide progress bar after completion
-        setTimeout(() => {
-            progressBar.style.display = 'none';
-            progress.style.width = '0%';
-        }, 2000);
+            const result = await response.json();
+            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+
+        } catch (error) {
+            console.error('Fetch error:', error);
+            document.getElementById('result').innerText = `Fetch error: ${error.message}`;
+        } finally {
+            // Hide loading spinner
+            loader.style.display = 'none';
+        }
     });
 </script>
 
