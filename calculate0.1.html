@@ -3,160 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Area, Volume, and Weight Calculator</title>
+    <title>Bearing Calculator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        h2 {
-            color: #333;
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        form {
-            margin-bottom: 20px;
+        .form-group {
+            margin-bottom: 15px;
         }
-        label {
-            font-weight: bold;
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
         }
-        input[type="text"] {
-            margin-bottom: 10px;
-            padding: 5px;
-            width: 200px;
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
         }
-        input[type="submit"], #exportButton {
-            padding: 10px 15px;
-            background-color: #4CAF50;
+        .btn {
+            background-color: #28a745;
             color: white;
+            padding: 10px 15px;
             border: none;
+            border-radius: 5px;
             cursor: pointer;
         }
-        input[type="submit"]:hover, #exportButton:hover {
-            background-color: #45a049;
+        .btn:hover {
+            background-color: #218838;
         }
-        #result {
+        .result {
             margin-top: 20px;
-        }
-        .result-item {
-            margin-bottom: 10px;
-        }
-        #exportButton {
-            display: none; /* Hidden by default */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
-    <h2>Area, Volume, and Weight Calculator</h2>
+
+<div class="container">
+    <h1>Bearing Calculator</h1>
     <form id="calculatorForm">
-        <label for="length">Length (mm):</label><br>
-        <input type="text" id="length" name="length"><br><br>
-        <label for="width">Width (mm):</label><br>
-        <input type="text" id="width" name="width"><br><br>
-        <label for="height">Height (mm):</label><br>
-        <input type="text" id="height" name="height"><br><br>
-        <label for="density">Density (kg/m³):</label><br>
-        <input type="text" id="density" name="density"><br><br>
-        <input type="submit" value="Calculate Area, Volume, and Weight">
+        <div class="form-group">
+            <label for="length_min">Length Min:</label>
+            <input type="number" id="length_min" name="length_min" step="any" required value="10">
+        </div>
+        <div class="form-group">
+            <label for="length_max">Length Max:</label>
+            <input type="number" id="length_max" name="length_max" step="any" required value="100">
+        </div>
+        <div class="form-group">
+            <label for="length_increment">Length Increment:</label>
+            <input type="number" id="length_increment" name="length_increment" step="any" required value="10">
+        </div>
+        <div class="form-group">
+            <label for="width_min">Width Min:</label>
+            <input type="number" id="width_min" name="width_min" step="any" required value="5">
+        </div>
+        <div class="form-group">
+            <label for="width_max">Width Max:</label>
+            <input type="number" id="width_max" name="width_max" step="any" required value="50">
+        </div>
+        <div class="form-group">
+            <label for="width_increment">Width Increment:</label>
+            <input type="number" id="width_increment" name="width_increment" step="any" required value="5">
+        </div>
+        <div class="form-group">
+            <label for="height_min">Height Min:</label>
+            <input type="number" id="height_min" name="height_min" step="any" required value="1">
+        </div>
+        <div class="form-group">
+            <label for="height_max">Height Max:</label>
+            <input type="number" id="height_max" name="height_max" step="any" required value="10">
+        </div>
+        <div class="form-group">
+            <label for="height_increment">Height Increment:</label>
+            <input type="number" id="height_increment" name="height_increment" step="any" required value="1">
+        </div>
+        <div class="form-group">
+            <label for="density">Density:</label>
+            <input type="number" id="density" name="density" step="any" required value="7850">
+        </div>
+        <div class="form-group">
+            <label for="min_pressure">Min Pressure:</label>
+            <input type="number" id="min_pressure" name="min_pressure" step="any" required value="10">
+        </div>
+        <div class="form-group">
+            <label for="max_pressure">Max Pressure:</label>
+            <input type="number" id="max_pressure" name="max_pressure" step="any" required value="50">
+        </div>
+        <div class="form-group">
+            <label for="load_kn">Load (kN):</label>
+            <input type="number" id="load_kn" name="load_kn" step="any" required value="20">
+        </div>
+        <div class="form-group">
+            <label for="movement_mm">Movement (mm):</label>
+            <input type="number" id="movement_mm" name="movement_mm" step="any" required value="5">
+        </div>
+        <div id="loader" class="loader" style="display: none;"></div>
+        <button type="submit" class="btn">Calculate</button>
     </form>
-    <div id="result"></div>
-    <button id="exportButton">Export to Excel</button>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
-    <script>
-        let latestResult = null; // To store the latest result for exporting
+    <div id="result" class="result"></div>
+</div>
 
-        document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // Prevent form submission
+<script>
+    document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
 
-            const length = parseFloat(document.getElementById('length').value) || 0;
-            const width = parseFloat(document.getElementById('width').value) || 0;
-            const height = parseFloat(document.getElementById('height').value) || 0;
-            const density = parseFloat(document.getElementById('density').value) || 0;
+        // Show loading spinner
+        const loader = document.getElementById('loader');
+        loader.style.display = 'block';
 
-            const payload = {
-                length: length,
-                width: width,
-                height: height,
-                density: density
-            };
+        const formData = {
+            length: {
+                min: parseFloat(document.getElementById('length_min').value),
+                max: parseFloat(document.getElementById('length_max').value),
+                increment: parseFloat(document.getElementById('length_increment').value)
+            },
+            width: {
+                min: parseFloat(document.getElementById('width_min').value),
+                max: parseFloat(document.getElementById('width_max').value),
+                increment: parseFloat(document.getElementById('width_increment').value)
+            },
+            height: {
+                min: parseFloat(document.getElementById('height_min').value),
+                max: parseFloat(document.getElementById('height_max').value),
+                increment: parseFloat(document.getElementById('height_increment').value)
+            },
+            density: parseFloat(document.getElementById('density').value),
+            min_pressure: parseFloat(document.getElementById('min_pressure').value),
+            max_pressure: parseFloat(document.getElementById('max_pressure').value),
+            load_kn: parseFloat(document.getElementById('load_kn').value),
+            movement_mm: parseFloat(document.getElementById('movement_mm').value)
+        };
 
-            try {
-                const response = await axios.post('https://calculation-tools-v1.azurewebsites.net/api/bearing_calculator_v1', payload);
+        try {
+            const response = await fetch('http://localhost:7071/api/bearing_calculator_v1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
 
-                if (!response.data) {
-                    throw new Error("No data received from server.");
-                }
-
-                const result = response.data;
-
-                // Store result for later use in export
-                latestResult = { length, width, height, density, result };
-
-                // Display results in HTML
-                document.getElementById('result').innerHTML = `
-                    <div class="result-item"><strong>Footprint Area:</strong> ${result["Footprint Area (m²)"]} m²</div>
-                    <div class="result-item"><strong>Volume:</strong> ${result["Volume (m³)"]} m³</div>
-                    <div class="result-item"><strong>Weight:</strong> ${result["Weight (kg)"]} kg</div>
-                `;
-
-                // Show the export button
-                document.getElementById('exportButton').style.display = 'block';
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('result').innerText = "Error: " + error.message;
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
-        });
 
-        document.getElementById('exportButton').addEventListener('click', function() {
-            if (latestResult) {
-                generateExcel(latestResult.length, latestResult.width, latestResult.height, latestResult.density, latestResult.result);
-            }
-        });
+            const result = await response.json();
+            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
 
-        function generateExcel(length, width, height, density, result) {
-            // Prepare data for Excel
-            const data = [
-                ['Parameter', 'Value'],
-                ['Length (mm)', length],
-                ['Width (mm)', width],
-                ['Height (mm)', height],
-                ['Density (kg/m³)', density],
-                [],
-                ['Results'],
-                ['Footprint Area (m²)', result["Footprint Area (m²)"]],
-                ['Volume (m³)', result["Volume (m³)"]],
-                ['Weight (kg)', result["Weight (kg)"]]
-            ];
-
-            // Create a new workbook
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(data);
-
-            // Add sheet to workbook
-            XLSX.utils.book_append_sheet(wb, ws, 'Calculator Inputs and Results');
-
-            // Generate a download link for the Excel file
-            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([wbout], { type: 'application/octet-stream' });
-
-            const fileName = 'calculator_inputs_and_results.xlsx';
-
-            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-                // For IE and Edge
-                window.navigator.msSaveOrOpenBlob(blob, fileName);
-            } else {
-                // For other browsers
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                }, 0);
-            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            document.getElementById('result').innerText = `Fetch error: ${error.message}`;
+        } finally {
+            // Hide loading spinner
+            loader.style.display = 'none';
         }
-    </script>
+    });
+</script>
+
 </body>
 </html>
