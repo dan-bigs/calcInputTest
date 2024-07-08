@@ -4,175 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bearing Calculator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-        }
-        .btn {
-            background-color: #28a745;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn:hover {
-            background-color: #218838;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-            white-space: pre-wrap;
-        }
-    </style>
 </head>
 <body>
-
-<div class="container">
     <h1>Bearing Calculator</h1>
-    <form id="calculatorForm">
-        <div class="form-group">
-            <label for="length_min">Length Min:</label>
-            <input type="number" id="length_min" name="length_min" step="any" required value="10">
-        </div>
-        <div class="form-group">
-            <label for="length_max">Length Max:</label>
-            <input type="number" id="length_max" name="length_max" step="any" required value="100">
-        </div>
-        <div class="form-group">
-            <label for="length_increment">Length Increment:</label>
-            <input type="number" id="length_increment" name="length_increment" step="any" required value="10">
-        </div>
-        <div class="form-group">
-            <label for="width_min">Width Min:</label>
-            <input type="number" id="width_min" name="width_min" step="any" required value="5">
-        </div>
-        <div class="form-group">
-            <label for="width_max">Width Max:</label>
-            <input type="number" id="width_max" name="width_max" step="any" required value="50">
-        </div>
-        <div class="form-group">
-            <label for="width_increment">Width Increment:</label>
-            <input type="number" id="width_increment" name="width_increment" step="any" required value="5">
-        </div>
-        <div class="form-group">
-            <label for="height_min">Height Min:</label>
-            <input type="number" id="height_min" name="height_min" step="any" required value="1">
-        </div>
-        <div class="form-group">
-            <label for="height_max">Height Max:</label>
-            <input type="number" id="height_max" name="height_max" step="any" required value="10">
-        </div>
-        <div class="form-group">
-            <label for="height_increment">Height Increment:</label>
-            <input type="number" id="height_increment" name="height_increment" step="any" required value="1">
-        </div>
-        <div class="form-group">
-            <label for="density">Density (kg/m³):</label>
-            <input type="number" id="density" name="density" step="any" required value="7850">
-        </div>
-        <div class="form-group">
-            <label for="min_pressure">Min Pressure (MPa):</label>
-            <input type="number" id="min_pressure" name="min_pressure" step="any" required value="10">
-        </div>
-        <div class="form-group">
-            <label for="max_pressure">Max Pressure (MPa):</label>
-            <input type="number" id="max_pressure" name="max_pressure" step="any" required value="50">
-        </div>
-        <div class="form-group">
-            <label for="load_kn">Load (kN):</label>
-            <input type="number" id="load_kn" name="load_kn" step="any" required value="2000">
-        </div>
-        <div class="form-group">
-            <label for="movement_mm">Movement (mm):</label>
-            <input type="number" id="movement_mm" name="movement_mm" step="any" required value="5">
-        </div>
-        <div id="loader" class="loader" style="display: none;"></div>
-        <button type="submit" class="btn">Calculate</button>
+    <form id="bearing-form">
+        <label for="max_pressure">Max Pressure (MPa):</label>
+        <input type="number" id="max_pressure" name="max_pressure" step="0.01" required>
+        <br><br>
+        <label for="vertical_load_kn">Vertical Load (kN):</label>
+        <input type="number" id="vertical_load_kn" name="vertical_load_kn" step="0.01" required>
+        <br><br>
+        <label for="x_movement_mm">X Movement (mm):</label>
+        <input type="number" id="x_movement_mm" name="x_movement_mm" step="0.01" required>
+        <br><br>
+        <label for="y_movement_mm">Y Movement (mm):</label>
+        <input type="number" id="y_movement_mm" name="y_movement_mm" step="0.01" required>
+        <br><br>
+        <button type="submit">Calculate</button>
     </form>
-    <div id="result" class="result"></div>
-</div>
 
-<script>
-    document.getElementById('calculatorForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
+    <h2>Optimal Bearing Combination</h2>
+    <pre id="result"></pre>
 
-        // Show loading spinner
-        const loader = document.getElementById('loader');
-        loader.style.display = 'block';
+    <script>
+        document.getElementById('bearing-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {
+                max_pressure: parseFloat(formData.get('max_pressure')),
+                vertical_load_kn: parseFloat(formData.get('vertical_load_kn')),
+                x_movement_mm: parseFloat(formData.get('x_movement_mm')),
+                y_movement_mm: parseFloat(formData.get('y_movement_mm'))
+            };
 
-        const formData = {
-            length: {
-                min: parseFloat(document.getElementById('length_min').value),
-                max: parseFloat(document.getElementById('length_max').value),
-                increment: parseFloat(document.getElementById('length_increment').value)
-            },
-            width: {
-                min: parseFloat(document.getElementById('width_min').value),
-                max: parseFloat(document.getElementById('width_max').value),
-                increment: parseFloat(document.getElementById('width_increment').value)
-            },
-            height: {
-                min: parseFloat(document.getElementById('height_min').value),
-                max: parseFloat(document.getElementById('height_max').value),
-                increment: parseFloat(document.getElementById('height_increment').value)
-            },
-            density: parseFloat(document.getElementById('density').value),
-            min_pressure: parseFloat(document.getElementById('min_pressure').value),
-            max_pressure: parseFloat(document.getElementById('max_pressure').value),
-            load_kn: parseFloat(document.getElementById('load_kn').value),
-            movement_mm: parseFloat(document.getElementById('movement_mm').value)
-        };
-
-        try {
-            const response = await fetch('http://localhost:7071/api/bearing_calculator_v1', {
+            fetch('https://your-function-url/api/bearing_calculator_v1', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('result').textContent = 'An error occurred: ' + error.message;
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
-
-        } catch (error) {
-            console.error('Fetch error:', error);
-            document.getElementById('result').innerText = `Fetch error: ${error.message}`;
-        } finally {
-            // Hide loading spinner
-            loader.style.display = 'none';
-        }
-    });
-</script>
-
+        });
+    </script>
 </body>
 </html>
