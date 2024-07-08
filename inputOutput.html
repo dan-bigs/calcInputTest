@@ -14,14 +14,12 @@
             color: #333;
             font-size: 20px;
         }
-        .form-columns {
-            display: flex;
-            gap: 20px;
-            justify-content: space-between;
-        }
         .form-column {
-            flex: 1;
-            width: calc(33.33% - 10px); /* 33.33% for each column with gap in between */
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
         }
         .form-column h2 {
             font-size: 16px;
@@ -34,7 +32,7 @@
         .form-column input {
             margin-bottom: 10px;
             padding: 4px;
-            width: calc(100% - 8px); /* Adjust width based on your preference */
+            width: calc(100% - 8px);
             font-size: 12px;
         }
         .form-column .calculate-button {
@@ -44,35 +42,36 @@
             border: none;
             cursor: pointer;
             font-size: 12px;
-            margin-top: 10px;
-            width: 100%;
-            box-sizing: border-box;
         }
         .form-column .calculate-button:hover {
             background-color: #0056b3;
         }
-        .result {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            background-color: #f9f9f9;
-            font-size: 12px;
-        }
-        .result h3 {
-            margin-top: 0;
+        #add-column-button, #remove-column-button {
+            margin-top: 10px;
+            padding: 5px 10px;
             font-size: 14px;
+            cursor: pointer;
         }
-        .result pre {
-            margin: 5px 0;
+        #add-column-button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+        }
+        #remove-column-button {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
         }
     </style>
 </head>
 <body>
     <h1>Bearing Calculator</h1>
-    <div class="form-columns">
-        <div class="form-column">
+    
+    <div id="form-container">
+        <!-- Initial column -->
+        <div class="form-column" id="form-column-1">
             <h2>Column 1</h2>
-            <form id="bearing-form-1">
+            <form class="bearing-form">
                 <label for="max_pressure_1">Max Elastomer Pressure (MPa):</label>
                 <input type="number" id="max_pressure_1" name="max_pressure" step="0.01" value="46.2" required>
                 
@@ -92,106 +91,87 @@
             </form>
             <div class="result" id="result_1"></div>
         </div>
-        
-        <div class="form-column">
-            <h2>Column 2</h2>
-            <form id="bearing-form-2">
-                <label for="max_pressure_2">Max Elastomer Pressure (MPa):</label>
-                <input type="number" id="max_pressure_2" name="max_pressure" step="0.01" value="46.2" required>
-                
-                <label for="max_sliding_pressure_2">Max Sliding Pressure (MPa):</label>
-                <input type="number" id="max_sliding_pressure_2" name="max_sliding_pressure" step="0.01" value="51.4" required>
-                
-                <label for="vertical_load_kn_2">Vertical Load (kN):</label>
-                <input type="number" id="vertical_load_kn_2" name="vertical_load_kn" step="0.01" value="20000" required>
-                
-                <label for="x_movement_mm_2">X Movement (mm):</label>
-                <input type="number" id="x_movement_mm_2" name="x_movement_mm" step="0.01" value="50" required>
-                
-                <label for="y_movement_mm_2">Y Movement (mm):</label>
-                <input type="number" id="y_movement_mm_2" name="y_movement_mm" step="0.01" value="50" required>
-                
-                <button type="submit" class="calculate-button">Calculate Column 2</button>
-            </form>
-            <div class="result" id="result_2"></div>
-        </div>
-        
-        <div class="form-column">
-            <h2>Column 3</h2>
-            <form id="bearing-form-3">
-                <label for="max_pressure_3">Max Elastomer Pressure (MPa):</label>
-                <input type="number" id="max_pressure_3" name="max_pressure" step="0.01" value="46.2" required>
-                
-                <label for="max_sliding_pressure_3">Max Sliding Pressure (MPa):</label>
-                <input type="number" id="max_sliding_pressure_3" name="max_sliding_pressure" step="0.01" value="51.4" required>
-                
-                <label for="vertical_load_kn_3">Vertical Load (kN):</label>
-                <input type="number" id="vertical_load_kn_3" name="vertical_load_kn" step="0.01" value="20000" required>
-                
-                <label for="x_movement_mm_3">X Movement (mm):</label>
-                <input type="number" id="x_movement_mm_3" name="x_movement_mm" step="0.01" value="50" required>
-                
-                <label for="y_movement_mm_3">Y Movement (mm):</label>
-                <input type="number" id="y_movement_mm_3" name="y_movement_mm" step="0.01" value="50" required>
-                
-                <button type="submit" class="calculate-button">Calculate Column 3</button>
-            </form>
-            <div class="result" id="result_3"></div>
-        </div>
     </div>
 
-    <button id="calculate-all-button" style="margin-top: 20px; padding: 10px; font-size: 14px;">Calculate All Columns</button>
+    <button id="add-column-button">Add Column</button>
+    <button id="remove-column-button">Remove Last Column</button>
 
     <script>
-        function calculateAndDisplayResult(formId, resultId) {
-            const formData = new FormData(document.getElementById(formId));
-            const data = {
-                max_pressure: parseFloat(formData.get('max_pressure')),
-                max_sliding_pressure: parseFloat(formData.get('max_sliding_pressure')),
-                vertical_load_kn: parseFloat(formData.get('vertical_load_kn')),
-                x_movement_mm: parseFloat(formData.get('x_movement_mm')),
-                y_movement_mm: parseFloat(formData.get('y_movement_mm'))
-            };
+        let columnCount = 1;
 
-            fetch('http://localhost:7071/api/bearing_calculator_v1', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                document.getElementById(resultId).innerHTML = `
-                    <h3>Optimal Bearing Combination for Column ${resultId.charAt(resultId.length - 1)}</h3>
-                    <pre>${JSON.stringify(result, null, 2)}</pre>
-                `;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById(resultId).textContent = 'An error occurred: ' + error.message;
+        document.getElementById('add-column-button').addEventListener('click', function() {
+            columnCount++;
+            const formContainer = document.getElementById('form-container');
+
+            const newColumn = document.createElement('div');
+            newColumn.classList.add('form-column');
+            newColumn.id = `form-column-${columnCount}`;
+            newColumn.innerHTML = `
+                <h2>Column ${columnCount}</h2>
+                <form class="bearing-form">
+                    <label for="max_pressure_${columnCount}">Max Elastomer Pressure (MPa):</label>
+                    <input type="number" id="max_pressure_${columnCount}" name="max_pressure" step="0.01" value="46.2" required>
+                    
+                    <label for="max_sliding_pressure_${columnCount}">Max Sliding Pressure (MPa):</label>
+                    <input type="number" id="max_sliding_pressure_${columnCount}" name="max_sliding_pressure" step="0.01" value="51.4" required>
+                    
+                    <label for="vertical_load_kn_${columnCount}">Vertical Load (kN):</label>
+                    <input type="number" id="vertical_load_kn_${columnCount}" name="vertical_load_kn" step="0.01" value="20000" required>
+                    
+                    <label for="x_movement_mm_${columnCount}">X Movement (mm):</label>
+                    <input type="number" id="x_movement_mm_${columnCount}" name="x_movement_mm" step="0.01" value="50" required>
+                    
+                    <label for="y_movement_mm_${columnCount}">Y Movement (mm):</label>
+                    <input type="number" id="y_movement_mm_${columnCount}" name="y_movement_mm" step="0.01" value="50" required>
+                    
+                    <button type="submit" class="calculate-button">Calculate Column ${columnCount}</button>
+                </form>
+                <div class="result" id="result_${columnCount}"></div>
+            `;
+
+            formContainer.appendChild(newColumn);
+        });
+
+        document.getElementById('remove-column-button').addEventListener('click', function() {
+            if (columnCount > 1) {
+                const formContainer = document.getElementById('form-container');
+                const lastColumn = document.getElementById(`form-column-${columnCount}`);
+                formContainer.removeChild(lastColumn);
+                columnCount--;
+            } else {
+                alert("Cannot remove the last column.");
+            }
+        });
+
+        // Submit form handler (simulated with preventDefault())
+        document.querySelectorAll('.bearing-form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(form);
+                const data = {
+                    max_pressure: parseFloat(formData.get('max_pressure')),
+                    max_sliding_pressure: parseFloat(formData.get('max_sliding_pressure')),
+                    vertical_load_kn: parseFloat(formData.get('vertical_load_kn')),
+                    x_movement_mm: parseFloat(formData.get('x_movement_mm')),
+                    y_movement_mm: parseFloat(formData.get('y_movement_mm'))
+                };
+
+                fetch('http://localhost:7071/api/bearing_calculator_v1', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    document.getElementById(`result_${columnCount}`).textContent = JSON.stringify(result, null, 2);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById(`result_${columnCount}`).textContent = 'An error occurred: ' + error.message;
+                });
             });
-        }
-
-        document.getElementById('bearing-form-1').addEventListener('submit', function(event) {
-            event.preventDefault();
-            calculateAndDisplayResult('bearing-form-1', 'result_1');
-        });
-
-        document.getElementById('bearing-form-2').addEventListener('submit', function(event) {
-            event.preventDefault();
-            calculateAndDisplayResult('bearing-form-2', 'result_2');
-        });
-
-        document.getElementById('bearing-form-3').addEventListener('submit', function(event) {
-            event.preventDefault();
-            calculateAndDisplayResult('bearing-form-3', 'result_3');
-        });
-
-        document.getElementById('calculate-all-button').addEventListener('click', function() {
-            calculateAndDisplayResult('bearing-form-1', 'result_1');
-            calculateAndDisplayResult('bearing-form-2', 'result_2');
-            calculateAndDisplayResult('bearing-form-3', 'result_3');
         });
     </script>
 </body>
