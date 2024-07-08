@@ -59,6 +59,7 @@
             border-radius: 5px;
             background-color: #f0f0f0;
             font-size: 12px;
+            white-space: pre-wrap; /* Ensure preformatted text wraps */
         }
         .button-container {
             display: flex;
@@ -228,7 +229,9 @@
                 .then(response => response.json())
                 .then(result => {
                     const resultId = form.parentNode.querySelector('.result').id;
-                    document.getElementById(resultId).textContent = JSON.stringify(result, null, 2);
+                    const resultDiv = document.getElementById(resultId);
+                    resultDiv.innerHTML = ''; // Clear previous result
+                    resultDiv.appendChild(formatResult(result)); // Format and display result
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -243,6 +246,16 @@
                 form.dispatchEvent(new Event('submit'));
             });
         });
+
+        function formatResult(result) {
+            const ul = document.createElement('ul');
+            for (const [key, value] of Object.entries(result)) {
+                const li = document.createElement('li');
+                li.textContent = `${key}: ${value}`;
+                ul.appendChild(li);
+            }
+            return ul;
+        }
     </script>
 </body>
 </html>
