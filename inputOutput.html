@@ -25,6 +25,7 @@
             padding: 10px;
             background-color: #f9f9f9;
             border-radius: 5px;
+            margin-bottom: 20px;
         }
         .form-column h2 {
             font-size: 16px;
@@ -62,8 +63,8 @@
         .button-container {
             display: flex;
             justify-content: flex-end;
-            margin-top: 20px;
             gap: 10px;
+            margin-bottom: 20px;
         }
         .button-container button {
             padding: 8px 15px;
@@ -150,6 +151,7 @@
             `;
 
             columnsContainer.appendChild(newColumn);
+            attachFormSubmitEvent(newColumn.querySelector('.bearing-form'));
         });
 
         document.getElementById('remove-column-button').addEventListener('click', function() {
@@ -163,8 +165,8 @@
             }
         });
 
-        // Submit form handler (simulated with preventDefault())
-        document.querySelectorAll('.bearing-form').forEach(form => {
+        // Attach form submit event to existing and new forms
+        function attachFormSubmitEvent(form) {
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const formData = new FormData(form);
@@ -192,6 +194,11 @@
                     document.getElementById(`result_${columnCount}`).textContent = 'An error occurred: ' + error.message;
                 });
             });
+        }
+
+        // Attach initial form submit events
+        document.querySelectorAll('.bearing-form').forEach(form => {
+            attachFormSubmitEvent(form);
         });
     </script>
 </body>
