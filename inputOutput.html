@@ -21,9 +21,11 @@
         }
         .form-column {
             flex: 1;
+            width: calc(33.33% - 10px); /* 33.33% for each column with gap in between */
         }
         .form-column h2 {
             font-size: 16px;
+            margin-bottom: 10px;
         }
         .form-column label {
             display: block;
@@ -35,15 +37,18 @@
             width: calc(100% - 8px); /* Adjust width based on your preference */
             font-size: 12px;
         }
-        .form-column button {
+        .form-column .calculate-button {
             padding: 5px 10px;
             background-color: #007BFF;
             color: #fff;
             border: none;
             cursor: pointer;
             font-size: 12px;
+            margin-top: 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
-        .form-column button:hover {
+        .form-column .calculate-button:hover {
             background-color: #0056b3;
         }
         .result {
@@ -57,7 +62,7 @@
             margin-top: 0;
             font-size: 14px;
         }
-        .result p {
+        .result pre {
             margin: 5px 0;
         }
     </style>
@@ -83,7 +88,7 @@
                 <label for="y_movement_mm_1">Y Movement (mm):</label>
                 <input type="number" id="y_movement_mm_1" name="y_movement_mm" step="0.01" value="50" required>
                 
-                <button type="submit">Calculate Column 1</button>
+                <button type="submit" class="calculate-button">Calculate Column 1</button>
             </form>
             <div class="result" id="result_1"></div>
         </div>
@@ -106,11 +111,36 @@
                 <label for="y_movement_mm_2">Y Movement (mm):</label>
                 <input type="number" id="y_movement_mm_2" name="y_movement_mm" step="0.01" value="50" required>
                 
-                <button type="submit">Calculate Column 2</button>
+                <button type="submit" class="calculate-button">Calculate Column 2</button>
             </form>
             <div class="result" id="result_2"></div>
         </div>
+        
+        <div class="form-column">
+            <h2>Column 3</h2>
+            <form id="bearing-form-3">
+                <label for="max_pressure_3">Max Elastomer Pressure (MPa):</label>
+                <input type="number" id="max_pressure_3" name="max_pressure" step="0.01" value="46.2" required>
+                
+                <label for="max_sliding_pressure_3">Max Sliding Pressure (MPa):</label>
+                <input type="number" id="max_sliding_pressure_3" name="max_sliding_pressure" step="0.01" value="51.4" required>
+                
+                <label for="vertical_load_kn_3">Vertical Load (kN):</label>
+                <input type="number" id="vertical_load_kn_3" name="vertical_load_kn" step="0.01" value="20000" required>
+                
+                <label for="x_movement_mm_3">X Movement (mm):</label>
+                <input type="number" id="x_movement_mm_3" name="x_movement_mm" step="0.01" value="50" required>
+                
+                <label for="y_movement_mm_3">Y Movement (mm):</label>
+                <input type="number" id="y_movement_mm_3" name="y_movement_mm" step="0.01" value="50" required>
+                
+                <button type="submit" class="calculate-button">Calculate Column 3</button>
+            </form>
+            <div class="result" id="result_3"></div>
+        </div>
     </div>
+
+    <button id="calculate-all-button" style="margin-top: 20px; padding: 10px; font-size: 14px;">Calculate All Columns</button>
 
     <script>
         function calculateAndDisplayResult(formId, resultId) {
@@ -151,6 +181,17 @@
         document.getElementById('bearing-form-2').addEventListener('submit', function(event) {
             event.preventDefault();
             calculateAndDisplayResult('bearing-form-2', 'result_2');
+        });
+
+        document.getElementById('bearing-form-3').addEventListener('submit', function(event) {
+            event.preventDefault();
+            calculateAndDisplayResult('bearing-form-3', 'result_3');
+        });
+
+        document.getElementById('calculate-all-button').addEventListener('click', function() {
+            calculateAndDisplayResult('bearing-form-1', 'result_1');
+            calculateAndDisplayResult('bearing-form-2', 'result_2');
+            calculateAndDisplayResult('bearing-form-3', 'result_3');
         });
     </script>
 </body>
