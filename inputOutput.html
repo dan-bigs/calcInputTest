@@ -14,28 +14,36 @@
             color: #333;
             font-size: 20px;
         }
-        form {
-            margin-bottom: 20px;
+        .form-columns {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
         }
-        label {
+        .form-column {
+            flex: 1;
+        }
+        .form-column h2 {
+            font-size: 16px;
+        }
+        .form-column label {
             display: block;
             margin-bottom: 5px;
         }
-        input {
+        .form-column input {
             margin-bottom: 10px;
             padding: 4px;
-            width: 150px;  /* Smaller width */
-            font-size: 12px;  /* Smaller font size */
+            width: calc(100% - 8px); /* Adjust width based on your preference */
+            font-size: 12px;
         }
-        button {
+        .form-column button {
             padding: 5px 10px;
             background-color: #007BFF;
             color: #fff;
             border: none;
             cursor: pointer;
-            font-size: 12px;  /* Smaller font size */
+            font-size: 12px;
         }
-        button:hover {
+        .form-column button:hover {
             background-color: #0056b3;
         }
         .result {
@@ -43,11 +51,11 @@
             padding: 10px;
             border: 1px solid #ddd;
             background-color: #f9f9f9;
-            font-size: 12px;  /* Smaller font size */
+            font-size: 12px;
         }
         .result h3 {
             margin-top: 0;
-            font-size: 14px;  /* Smaller font size */
+            font-size: 14px;
         }
         .result p {
             margin: 5px 0;
@@ -56,32 +64,57 @@
 </head>
 <body>
     <h1>Bearing Calculator</h1>
-    <form id="bearing-form">
-        <label for="max_pressure">Max Elastomer Pressure (MPa):</label>
-        <input type="number" id="max_pressure" name="max_pressure" step="0.01" value="46.2" required>
-        <br><br>
-        <label for="max_sliding_pressure">Max Sliding Pressure (MPa):</label>
-        <input type="number" id="max_sliding_pressure" name="max_sliding_pressure" step="0.01" value="51.4" required>
-        <br><br>
-        <label for="vertical_load_kn">Vertical Load (kN):</label>
-        <input type="number" id="vertical_load_kn" name="vertical_load_kn" step="0.01" value="20000" required>
-        <br><br>
-        <label for="x_movement_mm">X Movement (mm):</label>
-        <input type="number" id="x_movement_mm" name="x_movement_mm" step="0.01" value="50" required>
-        <br><br>
-        <label for="y_movement_mm">Y Movement (mm):</label>
-        <input type="number" id="y_movement_mm" name="y_movement_mm" step="0.01" value="50" required>
-        <br><br>
-        <button type="submit">Calculate</button>
-    </form>
-
-    <h2>Optimal Bearing Combination</h2>
-    <div id="result" class="result"></div>
+    <div class="form-columns">
+        <div class="form-column">
+            <h2>Column 1</h2>
+            <form id="bearing-form-1">
+                <label for="max_pressure_1">Max Elastomer Pressure (MPa):</label>
+                <input type="number" id="max_pressure_1" name="max_pressure" step="0.01" value="46.2" required>
+                
+                <label for="max_sliding_pressure_1">Max Sliding Pressure (MPa):</label>
+                <input type="number" id="max_sliding_pressure_1" name="max_sliding_pressure" step="0.01" value="51.4" required>
+                
+                <label for="vertical_load_kn_1">Vertical Load (kN):</label>
+                <input type="number" id="vertical_load_kn_1" name="vertical_load_kn" step="0.01" value="20000" required>
+                
+                <label for="x_movement_mm_1">X Movement (mm):</label>
+                <input type="number" id="x_movement_mm_1" name="x_movement_mm" step="0.01" value="50" required>
+                
+                <label for="y_movement_mm_1">Y Movement (mm):</label>
+                <input type="number" id="y_movement_mm_1" name="y_movement_mm" step="0.01" value="50" required>
+                
+                <button type="submit">Calculate Column 1</button>
+            </form>
+            <div class="result" id="result_1"></div>
+        </div>
+        
+        <div class="form-column">
+            <h2>Column 2</h2>
+            <form id="bearing-form-2">
+                <label for="max_pressure_2">Max Elastomer Pressure (MPa):</label>
+                <input type="number" id="max_pressure_2" name="max_pressure" step="0.01" value="46.2" required>
+                
+                <label for="max_sliding_pressure_2">Max Sliding Pressure (MPa):</label>
+                <input type="number" id="max_sliding_pressure_2" name="max_sliding_pressure" step="0.01" value="51.4" required>
+                
+                <label for="vertical_load_kn_2">Vertical Load (kN):</label>
+                <input type="number" id="vertical_load_kn_2" name="vertical_load_kn" step="0.01" value="20000" required>
+                
+                <label for="x_movement_mm_2">X Movement (mm):</label>
+                <input type="number" id="x_movement_mm_2" name="x_movement_mm" step="0.01" value="50" required>
+                
+                <label for="y_movement_mm_2">Y Movement (mm):</label>
+                <input type="number" id="y_movement_mm_2" name="y_movement_mm" step="0.01" value="50" required>
+                
+                <button type="submit">Calculate Column 2</button>
+            </form>
+            <div class="result" id="result_2"></div>
+        </div>
+    </div>
 
     <script>
-        document.getElementById('bearing-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
+        function calculateAndDisplayResult(formId, resultId) {
+            const formData = new FormData(document.getElementById(formId));
             const data = {
                 max_pressure: parseFloat(formData.get('max_pressure')),
                 max_sliding_pressure: parseFloat(formData.get('max_sliding_pressure')),
@@ -99,23 +132,25 @@
             })
             .then(response => response.json())
             .then(result => {
-                const resultContainer = document.getElementById('result');
-                resultContainer.innerHTML = ''; // Clear previous result
-
-                const title = document.createElement('h3');
-                title.textContent = 'Optimal Bearing Combination:';
-                resultContainer.appendChild(title);
-
-                for (const [key, value] of Object.entries(result)) {
-                    const paragraph = document.createElement('p');
-                    paragraph.innerHTML = `<strong>${key}:</strong> ${value}`;
-                    resultContainer.appendChild(paragraph);
-                }
+                document.getElementById(resultId).innerHTML = `
+                    <h3>Optimal Bearing Combination for Column ${resultId.charAt(resultId.length - 1)}</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
             })
             .catch(error => {
                 console.error('Error:', error);
-                document.getElementById('result').textContent = 'An error occurred: ' + error.message;
+                document.getElementById(resultId).textContent = 'An error occurred: ' + error.message;
             });
+        }
+
+        document.getElementById('bearing-form-1').addEventListener('submit', function(event) {
+            event.preventDefault();
+            calculateAndDisplayResult('bearing-form-1', 'result_1');
+        });
+
+        document.getElementById('bearing-form-2').addEventListener('submit', function(event) {
+            event.preventDefault();
+            calculateAndDisplayResult('bearing-form-2', 'result_2');
         });
     </script>
 </body>
