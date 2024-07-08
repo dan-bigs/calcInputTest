@@ -71,23 +71,20 @@
             font-size: 14px;
             cursor: pointer;
         }
-        #add-column-button {
+        #calculate-all-button {
             background-color: #28a745;
             color: #fff;
             border: none;
         }
-        #remove-column-button {
-            background-color: #dc3545;
-            color: #fff;
-            border: none;
+        #calculate-all-button:hover {
+            background-color: #218838;
         }
     </style>
 </head>
 <body>
     <h1>Bearing Calculator</h1>
     
-    <div class="columns-container" id="columns-container">
-        <!-- Initial column -->
+    <div class="columns-container">
         <div class="form-column" id="form-column-1">
             <h2>Column 1</h2>
             <form class="bearing-form">
@@ -110,63 +107,106 @@
             </form>
             <div class="result" id="result_1"></div>
         </div>
+        
+        <div class="form-column" id="form-column-2">
+            <h2>Column 2</h2>
+            <form class="bearing-form">
+                <label for="max_pressure_2">Max Elastomer Pressure (MPa):</label>
+                <input type="number" id="max_pressure_2" name="max_pressure" step="0.01" value="46.2" required>
+                
+                <label for="max_sliding_pressure_2">Max Sliding Pressure (MPa):</label>
+                <input type="number" id="max_sliding_pressure_2" name="max_sliding_pressure" step="0.01" value="51.4" required>
+                
+                <label for="vertical_load_kn_2">Vertical Load (kN):</label>
+                <input type="number" id="vertical_load_kn_2" name="vertical_load_kn" step="0.01" value="20000" required>
+                
+                <label for="x_movement_mm_2">X Movement (mm):</label>
+                <input type="number" id="x_movement_mm_2" name="x_movement_mm" step="0.01" value="50" required>
+                
+                <label for="y_movement_mm_2">Y Movement (mm):</label>
+                <input type="number" id="y_movement_mm_2" name="y_movement_mm" step="0.01" value="50" required>
+                
+                <button type="submit" class="calculate-button">Calculate</button>
+            </form>
+            <div class="result" id="result_2"></div>
+        </div>
+        
+        <div class="form-column" id="form-column-3">
+            <h2>Column 3</h2>
+            <form class="bearing-form">
+                <label for="max_pressure_3">Max Elastomer Pressure (MPa):</label>
+                <input type="number" id="max_pressure_3" name="max_pressure" step="0.01" value="46.2" required>
+                
+                <label for="max_sliding_pressure_3">Max Sliding Pressure (MPa):</label>
+                <input type="number" id="max_sliding_pressure_3" name="max_sliding_pressure" step="0.01" value="51.4" required>
+                
+                <label for="vertical_load_kn_3">Vertical Load (kN):</label>
+                <input type="number" id="vertical_load_kn_3" name="vertical_load_kn" step="0.01" value="20000" required>
+                
+                <label for="x_movement_mm_3">X Movement (mm):</label>
+                <input type="number" id="x_movement_mm_3" name="x_movement_mm" step="0.01" value="50" required>
+                
+                <label for="y_movement_mm_3">Y Movement (mm):</label>
+                <input type="number" id="y_movement_mm_3" name="y_movement_mm" step="0.01" value="50" required>
+                
+                <button type="submit" class="calculate-button">Calculate</button>
+            </form>
+            <div class="result" id="result_3"></div>
+        </div>
+        
+        <div class="form-column" id="form-column-4">
+            <h2>Column 4</h2>
+            <form class="bearing-form">
+                <label for="max_pressure_4">Max Elastomer Pressure (MPa):</label>
+                <input type="number" id="max_pressure_4" name="max_pressure" step="0.01" value="46.2" required>
+                
+                <label for="max_sliding_pressure_4">Max Sliding Pressure (MPa):</label>
+                <input type="number" id="max_sliding_pressure_4" name="max_sliding_pressure" step="0.01" value="51.4" required>
+                
+                <label for="vertical_load_kn_4">Vertical Load (kN):</label>
+                <input type="number" id="vertical_load_kn_4" name="vertical_load_kn" step="0.01" value="20000" required>
+                
+                <label for="x_movement_mm_4">X Movement (mm):</label>
+                <input type="number" id="x_movement_mm_4" name="x_movement_mm" step="0.01" value="50" required>
+                
+                <label for="y_movement_mm_4">Y Movement (mm):</label>
+                <input type="number" id="y_movement_mm_4" name="y_movement_mm" step="0.01" value="50" required>
+                
+                <button type="submit" class="calculate-button">Calculate</button>
+            </form>
+            <div class="result" id="result_4"></div>
+        </div>
+        
+        <div class="form-column" id="form-column-5">
+            <h2>Column 5</h2>
+            <form class="bearing-form">
+                <label for="max_pressure_5">Max Elastomer Pressure (MPa):</label>
+                <input type="number" id="max_pressure_5" name="max_pressure" step="0.01" value="46.2" required>
+                
+                <label for="max_sliding_pressure_5">Max Sliding Pressure (MPa):</label>
+                <input type="number" id="max_sliding_pressure_5" name="max_sliding_pressure" step="0.01" value="51.4" required>
+                
+                <label for="vertical_load_kn_5">Vertical Load (kN):</label>
+                <input type="number" id="vertical_load_kn_5" name="vertical_load_kn" step="0.01" value="20000" required>
+                
+                <label for="x_movement_mm_5">X Movement (mm):</label>
+                <input type="number" id="x_movement_mm_5" name="x_movement_mm" step="0.01" value="50" required>
+                
+                <label for="y_movement_mm_5">Y Movement (mm):</label>
+                <input type="number" id="y_movement_mm_5" name="y_movement_mm" step="0.01" value="50" required>
+                
+                <button type="submit" class="calculate-button">Calculate</button>
+            </form>
+            <div class="result" id="result_5"></div>
+        </div>
     </div>
 
     <div class="button-container">
-        <button id="add-column-button">Add Column</button>
-        <button id="remove-column-button">Remove Last Column</button>
+        <button id="calculate-all-button">Calculate All</button>
     </div>
 
     <script>
-        let columnCount = 1;
-
-        document.getElementById('add-column-button').addEventListener('click', function() {
-            columnCount++;
-            const columnsContainer = document.getElementById('columns-container');
-
-            const newColumn = document.createElement('div');
-            newColumn.classList.add('form-column');
-            newColumn.id = `form-column-${columnCount}`;
-            newColumn.innerHTML = `
-                <h2>Column ${columnCount}</h2>
-                <form class="bearing-form">
-                    <label for="max_pressure_${columnCount}">Max Elastomer Pressure (MPa):</label>
-                    <input type="number" id="max_pressure_${columnCount}" name="max_pressure" step="0.01" value="46.2" required>
-                    
-                    <label for="max_sliding_pressure_${columnCount}">Max Sliding Pressure (MPa):</label>
-                    <input type="number" id="max_sliding_pressure_${columnCount}" name="max_sliding_pressure" step="0.01" value="51.4" required>
-                    
-                    <label for="vertical_load_kn_${columnCount}">Vertical Load (kN):</label>
-                    <input type="number" id="vertical_load_kn_${columnCount}" name="vertical_load_kn" step="0.01" value="20000" required>
-                    
-                    <label for="x_movement_mm_${columnCount}">X Movement (mm):</label>
-                    <input type="number" id="x_movement_mm_${columnCount}" name="x_movement_mm" step="0.01" value="50" required>
-                    
-                    <label for="y_movement_mm_${columnCount}">Y Movement (mm):</label>
-                    <input type="number" id="y_movement_mm_${columnCount}" name="y_movement_mm" step="0.01" value="50" required>
-                    
-                    <button type="submit" class="calculate-button">Calculate</button>
-                </form>
-                <div class="result" id="result_${columnCount}"></div>
-            `;
-
-            columnsContainer.appendChild(newColumn);
-            attachFormSubmitEvent(newColumn.querySelector('.bearing-form'));
-        });
-
-        document.getElementById('remove-column-button').addEventListener('click', function() {
-            if (columnCount > 1) {
-                const columnsContainer = document.getElementById('columns-container');
-                const lastColumn = document.getElementById(`form-column-${columnCount}`);
-                columnsContainer.removeChild(lastColumn);
-                columnCount--;
-            } else {
-                alert("Cannot remove the last column.");
-            }
-        });
-
-        // Attach form submit event to existing and new forms
-        function attachFormSubmitEvent(form) {
+        document.querySelectorAll('.bearing-form').forEach(form => {
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const formData = new FormData(form);
@@ -187,18 +227,21 @@
                 })
                 .then(response => response.json())
                 .then(result => {
-                    document.getElementById(`result_${columnCount}`).textContent = JSON.stringify(result, null, 2);
+                    const resultId = form.parentNode.querySelector('.result').id;
+                    document.getElementById(resultId).textContent = JSON.stringify(result, null, 2);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById(`result_${columnCount}`).textContent = 'An error occurred: ' + error.message;
+                    const resultId = form.parentNode.querySelector('.result').id;
+                    document.getElementById(resultId).textContent = 'An error occurred: ' + error.message;
                 });
             });
-        }
+        });
 
-        // Attach initial form submit events
-        document.querySelectorAll('.bearing-form').forEach(form => {
-            attachFormSubmitEvent(form);
+        document.getElementById('calculate-all-button').addEventListener('click', function() {
+            document.querySelectorAll('.bearing-form').forEach(form => {
+                form.dispatchEvent(new Event('submit'));
+            });
         });
     </script>
 </body>
