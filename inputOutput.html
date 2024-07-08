@@ -37,7 +37,7 @@
                 y_movement_mm: parseFloat(formData.get('y_movement_mm'))
             };
 
-            fetch('https://your-function-url/api/bearing_calculator_v1', {
+            fetch('http://localhost:7071/api/bearing_calculator_v1', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
