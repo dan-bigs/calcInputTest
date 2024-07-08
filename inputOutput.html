@@ -14,8 +14,13 @@
             color: #333;
             font-size: 20px;
         }
+        .columns-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
         .form-column {
-            margin-bottom: 20px;
+            flex: 1;
             border: 1px solid #ccc;
             padding: 10px;
             background-color: #f9f9f9;
@@ -46,9 +51,22 @@
         .form-column .calculate-button:hover {
             background-color: #0056b3;
         }
-        #add-column-button, #remove-column-button {
+        .result {
             margin-top: 10px;
-            padding: 5px 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            font-size: 12px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .button-container button {
+            padding: 8px 15px;
             font-size: 14px;
             cursor: pointer;
         }
@@ -67,7 +85,7 @@
 <body>
     <h1>Bearing Calculator</h1>
     
-    <div id="form-container">
+    <div class="columns-container" id="columns-container">
         <!-- Initial column -->
         <div class="form-column" id="form-column-1">
             <h2>Column 1</h2>
@@ -87,21 +105,23 @@
                 <label for="y_movement_mm_1">Y Movement (mm):</label>
                 <input type="number" id="y_movement_mm_1" name="y_movement_mm" step="0.01" value="50" required>
                 
-                <button type="submit" class="calculate-button">Calculate Column 1</button>
+                <button type="submit" class="calculate-button">Calculate</button>
             </form>
             <div class="result" id="result_1"></div>
         </div>
     </div>
 
-    <button id="add-column-button">Add Column</button>
-    <button id="remove-column-button">Remove Last Column</button>
+    <div class="button-container">
+        <button id="add-column-button">Add Column</button>
+        <button id="remove-column-button">Remove Last Column</button>
+    </div>
 
     <script>
         let columnCount = 1;
 
         document.getElementById('add-column-button').addEventListener('click', function() {
             columnCount++;
-            const formContainer = document.getElementById('form-container');
+            const columnsContainer = document.getElementById('columns-container');
 
             const newColumn = document.createElement('div');
             newColumn.classList.add('form-column');
@@ -124,19 +144,19 @@
                     <label for="y_movement_mm_${columnCount}">Y Movement (mm):</label>
                     <input type="number" id="y_movement_mm_${columnCount}" name="y_movement_mm" step="0.01" value="50" required>
                     
-                    <button type="submit" class="calculate-button">Calculate Column ${columnCount}</button>
+                    <button type="submit" class="calculate-button">Calculate</button>
                 </form>
                 <div class="result" id="result_${columnCount}"></div>
             `;
 
-            formContainer.appendChild(newColumn);
+            columnsContainer.appendChild(newColumn);
         });
 
         document.getElementById('remove-column-button').addEventListener('click', function() {
             if (columnCount > 1) {
-                const formContainer = document.getElementById('form-container');
+                const columnsContainer = document.getElementById('columns-container');
                 const lastColumn = document.getElementById(`form-column-${columnCount}`);
-                formContainer.removeChild(lastColumn);
+                columnsContainer.removeChild(lastColumn);
                 columnCount--;
             } else {
                 alert("Cannot remove the last column.");
