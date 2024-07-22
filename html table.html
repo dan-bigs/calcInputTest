@@ -1,33 +1,100 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simple HTML Table</title>
+    <title>Azure Function Table Example</title>
+    <script>
+        async function callAzureFunctionForAllColumns() {
+            const url = "http://localhost:7071/api/bearing_calculator_v1"; // Replace with your actual function URL
+            const table = document.getElementById('inputTable');
+            const responseTable = document.getElementById('responseTable');
+            responseTable.innerHTML = ''; // Clear previous responses
+
+            // Loop through each column starting from the 3rd column
+            for (let j = 2; j < table.rows[0].cells.length; j++) {
+                const data = {
+                    ULS_max_kN: table.rows[0].cells[j].querySelector('input').value,
+                    ULS_min_kN: table.rows[1].cells[j].querySelector('input').value,
+                    longitudinal_rotation_mrad: table.rows[2].cells[j].querySelector('input').value,
+                    transverse_rotation_mrad: table.rows[3].cells[j].querySelector('input').value,
+                    longitudinal_movement_mm: table.rows[4].cells[j].querySelector('input').value,
+                    transverse_movement_mm: table.rows[5].cells[j].querySelector('input').value
+                };
+
+                try {
+                    const startTime = performance.now();
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const endTime = performance.now();
+
+                    const jsonResponse = await response.json();
+                    displayResponse(jsonResponse, j, endTime - startTime);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    displayError(j);
+                }
+            }
+        }
+
+        function displayResponse(response, columnIndex, time) {
+            const table = document.getElementById('responseTable');
+            let rowIndex = 0;
+
+            for (const [key, value] of Object.entries(response)) {
+                if (!table.rows[rowIndex]) {
+                    const row = table.insertRow(rowIndex);
+                    row.insertCell(0).innerText = key;
+                }
+                const cell = table.rows[rowIndex].insertCell(columnIndex);
+                cell.innerText = value;
+                rowIndex++;
+            }
+
+            // Display execution time
+            if (!table.rows[9]) {
+                const row = table.insertRow(9);
+                row.insertCell(0).innerText = "Execution Time";
+            }
+            table.rows[9].insertCell(columnIndex).innerText = time.toFixed(3);
+        }
+
+        function displayError(columnIndex) {
+            const table = document.getElementById('responseTable');
+            const row = table.insertRow(-1);
+            row.insertCell(0).innerText = "Error";
+            row.insertCell(columnIndex).innerText = "Check input values";
+        }
+    </script>
 </head>
 <body>
 
-<h2>Sample Table</h2>
+<h2>Input Table</h2>
+<table id="inputTable" border="1">
+    <tr>
+        <th>ULS_max_kN</th>
+        <th>ULS_min_kN</th>
+        <th>longitudinal_rotation_mrad</th>
+        <th>transverse_rotation_mrad</th>
+        <th>longitudinal_movement_mm</th>
+        <th>transverse_movement_mm</th>
+    </tr>
+    <tr><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td></tr>
+    <tr><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td></tr>
+    <tr><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td></tr>
+</table>
 
-<table border="1">
-  <tr>
-    <th>Header 1</th>
-    <th>Header 2</th>
-    <th>Header 3</th>
-  </tr>
-  <tr>
-    <td>Row 1, Cell 1</td>
-    <td>Row 1, Cell 2</td>
-    <td>Row 1, Cell 3</td>
-  </tr>
-  <tr>
-    <td>Row 2, Cell 1</td>
-    <td>Row 2, Cell 2</td>
-    <td>Row 2, Cell 3</td>
-  </tr>
-  <tr>
-    <td>Row 3, Cell 1</td>
-    <td>Row 3, Cell 2</td>
-    <td>Row 3, Cell 3</td>
-  </tr>
+<button onclick="callAzureFunctionForAllColumns()">Submit</button>
+
+<h2>Response Table</h2>
+<table id="responseTable" border="1">
+    <!-- Response will be inserted here -->
 </table>
 
 </body>
