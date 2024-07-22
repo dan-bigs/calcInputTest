@@ -1,144 +1,171 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Azure Function Interaction</title>
-    <script>
-        async function callAzureFunctionForAllColumns() {
-            const url = "http://localhost:7071/api/bearing_calculator_v1"; // Replace with your actual function URL
-            const table = document.getElementById('inputTable');
-            const responseTable = document.getElementById('responseTable');
-            responseTable.innerHTML = ''; // Clear previous responses
-
-            console.log('Starting to call Azure Function for all columns');
-
-            // Loop through each column starting from the 2nd column (1-based index)
-            for (let j = 1; j < table.rows[0].cells.length; j++) {
-                const data = {
-                    ULS_max_kN: parseFloat(table.rows[0].cells[j].querySelector('input').value) || 0,
-                    ULS_min_kN: parseFloat(table.rows[1].cells[j].querySelector('input').value) || 0,
-                    longitudinal_rotation_mrad: parseFloat(table.rows[2].cells[j].querySelector('input').value) || 0,
-                    transverse_rotation_mrad: parseFloat(table.rows[3].cells[j].querySelector('input').value) || 0,
-                    longitudinal_movement_mm: parseFloat(table.rows[4].cells[j].querySelector('input').value) || 0,
-                    transverse_movement_mm: parseFloat(table.rows[5].cells[j].querySelector('input').value) || 0
-                };
-
-                // Ensure that all required values are valid numbers
-                if (Object.values(data).some(isNaN)) {
-                    displayError(j, 'Invalid input. Please enter valid numbers.');
-                    continue;
-                }
-
-                console.log(`Sending data for column ${j}:`, data);
-
-                try {
-                    const startTime = performance.now();
-
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(data)
-                    });
-
-                    const endTime = performance.now();
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const jsonResponse = await response.json();
-                    console.log(`Received response for column ${j}:`, jsonResponse);
-                    displayResponse(jsonResponse, j, endTime - startTime);
-
-                } catch (error) {
-                    console.error('Error:', error);
-                    displayError(j, error.message);
-                }
-            }
-
-            console.log('Completed calling Azure Function for all columns');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bearing Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
         }
-
-        function displayResponse(response, columnIndex, time) {
-            const table = document.getElementById('responseTable');
-            let rowIndex = 0;
-
-            for (const [key, value] of Object.entries(response)) {
-                if (!table.rows[rowIndex]) {
-                    const row = table.insertRow(rowIndex);
-                    row.insertCell(0).innerText = key;
-                }
-                const cell = table.rows[rowIndex].insertCell(columnIndex);
-                cell.innerText = value;
-                rowIndex++;
-            }
-
-            // Display execution time
-            if (!table.rows[rowIndex]) {
-                const row = table.insertRow(rowIndex);
-                row.insertCell(0).innerText = "Execution Time";
-            }
-            const cell = table.rows[rowIndex].insertCell(columnIndex);
-            cell.innerText = time.toFixed(3);
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
         }
-
-        function displayError(columnIndex, message) {
-            const table = document.getElementById('responseTable');
-            const row = table.insertRow(-1);
-            row.insertCell(0).innerText = "Error";
-            row.insertCell(columnIndex).innerText = message;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
         }
-    </script>
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .align-middle {
+            vertical-align: middle;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button {
+            padding: 10px 20px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Bearing Calculator</h1>
+        <form id="bearingForm">
+            <div class="form-group">
+                <label for="ULS_max_kN">ULS Max Load (kN):</label>
+                <input type="number" id="ULS_max_kN" name="ULS_max_kN" step="any" required>
+            </div>
+            <div class="form-group">
+                <label for="ULS_min_kN">ULS Min Load (kN):</label>
+                <input type="number" id="ULS_min_kN" name="ULS_min_kN" step="any" required>
+            </div>
+            <div class="form-group">
+                <label for="longitudinal_rotation_mrad">Longitudinal Rotation (mrad):</label>
+                <input type="number" id="longitudinal_rotation_mrad" name="longitudinal_rotation_mrad" step="any" required>
+            </div>
+            <div class="form-group">
+                <label for="transverse_rotation_mrad">Transverse Rotation (mrad):</label>
+                <input type="number" id="transverse_rotation_mrad" name="transverse_rotation_mrad" step="any" required>
+            </div>
+            <div class="form-group">
+                <label for="longitudinal_movement_mm">Longitudinal Movement (mm):</label>
+                <input type="number" id="longitudinal_movement_mm" name="longitudinal_movement_mm" step="any" required>
+            </div>
+            <div class="form-group">
+                <label for="transverse_movement_mm">Transverse Movement (mm):</label>
+                <input type="number" id="transverse_movement_mm" name="transverse_movement_mm" step="any" required>
+            </div>
+            <button type="submit" class="button">Calculate</button>
+        </form>
 
-<h2>Input Table</h2>
-<table id="inputTable" border="1">
-    <tr>
-        <th>ULS_max_kN</th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-    </tr>
-    <tr>
-        <th>ULS_min_kN</th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-    </tr>
-    <tr>
-        <th>longitudinal_rotation_mrad</th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-    </tr>
-    <tr>
-        <th>transverse_rotation_mrad</th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-    </tr>
-    <tr>
-        <th>longitudinal_movement_mm</th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-    </tr>
-    <tr>
-        <th>transverse_movement_mm</th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-        <th><input type="text" /></th>
-    </tr>
-</table>
+        <h2>Results</h2>
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Results will be inserted here -->
+            </tbody>
+        </table>
+        <button id="addColumnBtn" class="button">Add Column</button>
+    </div>
 
-<button onclick="callAzureFunctionForAllColumns()">Submit</button>
+    <script>
+        document.getElementById('bearingForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
 
-<h2>Response Table</h2>
-<table id="responseTable" border="1">
-    <!-- Response will be inserted here -->
-</table>
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
 
+            try {
+                const response = await fetch('https://your-function-app-url.azurewebsites.net/api/bearing_calculator_v1', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+                displayResults(result);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        function displayResults(result) {
+            const tableBody = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';  // Clear existing results
+
+            if (result) {
+                for (const [key, value] of Object.entries(result)) {
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = key;
+                    row.insertCell().textContent = value;
+                }
+            } else {
+                const row = tableBody.insertRow();
+                row.insertCell().textContent = 'No results found';
+            }
+        }
+
+        document.getElementById('addColumnBtn').addEventListener('click', function() {
+            const tableHead = document.getElementById('resultTable').getElementsByTagName('thead')[0].getElementsByTagName('tr')[0];
+            const tableBody = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
+
+            const newHeader = document.createElement('th');
+            newHeader.textContent = 'New Column';
+            tableHead.appendChild(newHeader);
+
+            const rows = tableBody.getElementsByTagName('tr');
+            for (let row of rows) {
+                const newCell = row.insertCell();
+                newCell.textContent = 'New Data';  // Placeholder content
+            }
+        });
+    </script>
 </body>
 </html>
