@@ -11,16 +11,22 @@
 
             console.log('Starting to call Azure Function for all columns');
 
-            // Loop through each column starting from the 1st column
+            // Loop through each column starting from the 2nd column (1-based index)
             for (let j = 1; j < table.rows[0].cells.length; j++) {
                 const data = {
-                    ULS_max_kN: table.rows[0].cells[j].querySelector('input').value,
-                    ULS_min_kN: table.rows[1].cells[j].querySelector('input').value,
-                    longitudinal_rotation_mrad: table.rows[2].cells[j].querySelector('input').value,
-                    transverse_rotation_mrad: table.rows[3].cells[j].querySelector('input').value,
-                    longitudinal_movement_mm: table.rows[4].cells[j].querySelector('input').value,
-                    transverse_movement_mm: table.rows[5].cells[j].querySelector('input').value
+                    ULS_max_kN: parseFloat(table.rows[0].cells[j].querySelector('input').value) || 0,
+                    ULS_min_kN: parseFloat(table.rows[1].cells[j].querySelector('input').value) || 0,
+                    longitudinal_rotation_mrad: parseFloat(table.rows[2].cells[j].querySelector('input').value) || 0,
+                    transverse_rotation_mrad: parseFloat(table.rows[3].cells[j].querySelector('input').value) || 0,
+                    longitudinal_movement_mm: parseFloat(table.rows[4].cells[j].querySelector('input').value) || 0,
+                    transverse_movement_mm: parseFloat(table.rows[5].cells[j].querySelector('input').value) || 0
                 };
+
+                // Ensure that all required values are valid numbers
+                if (Object.values(data).some(isNaN)) {
+                    displayError(j, 'Invalid input. Please enter valid numbers.');
+                    continue;
+                }
 
                 console.log(`Sending data for column ${j}:`, data);
 
@@ -47,7 +53,7 @@
 
                 } catch (error) {
                     console.error('Error:', error);
-                    displayError(j);
+                    displayError(j, error.message);
                 }
             }
 
@@ -77,11 +83,11 @@
             cell.innerText = time.toFixed(3);
         }
 
-        function displayError(columnIndex) {
+        function displayError(columnIndex, message) {
             const table = document.getElementById('responseTable');
             const row = table.insertRow(-1);
             row.insertCell(0).innerText = "Error";
-            row.insertCell(columnIndex).innerText = "Check input values";
+            row.insertCell(columnIndex).innerText = message;
         }
     </script>
 </head>
