@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Azure Function Table Example</title>
+    <title>Azure Function Interaction</title>
     <script>
         async function callAzureFunctionForAllColumns() {
             const url = "http://localhost:7071/api/bearing_calculator_v1"; // Replace with your actual function URL
@@ -11,7 +11,7 @@
 
             console.log('Starting to call Azure Function for all columns');
 
-            // Loop through each column starting from the 3rd column
+            // Loop through each column starting from the 1st column
             for (let j = 1; j < table.rows[0].cells.length; j++) {
                 const data = {
                     ULS_max_kN: table.rows[0].cells[j].querySelector('input').value,
@@ -36,6 +36,10 @@
                     });
 
                     const endTime = performance.now();
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
 
                     const jsonResponse = await response.json();
                     console.log(`Received response for column ${j}:`, jsonResponse);
@@ -65,11 +69,12 @@
             }
 
             // Display execution time
-            if (!table.rows[9]) {
-                const row = table.insertRow(9);
+            if (!table.rows[rowIndex]) {
+                const row = table.insertRow(rowIndex);
                 row.insertCell(0).innerText = "Execution Time";
             }
-            table.rows[9].insertCell(columnIndex).innerText = time.toFixed(3);
+            const cell = table.rows[rowIndex].insertCell(columnIndex);
+            cell.innerText = time.toFixed(3);
         }
 
         function displayError(columnIndex) {
@@ -86,15 +91,40 @@
 <table id="inputTable" border="1">
     <tr>
         <th>ULS_max_kN</th>
-        <th>ULS_min_kN</th>
-        <th>longitudinal_rotation_mrad</th>
-        <th>transverse_rotation_mrad</th>
-        <th>longitudinal_movement_mm</th>
-        <th>transverse_movement_mm</th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
     </tr>
-    <tr><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td></tr>
-    <tr><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td></tr>
-    <tr><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td><td><input type="text" /></td></tr>
+    <tr>
+        <th>ULS_min_kN</th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+    </tr>
+    <tr>
+        <th>longitudinal_rotation_mrad</th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+    </tr>
+    <tr>
+        <th>transverse_rotation_mrad</th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+    </tr>
+    <tr>
+        <th>longitudinal_movement_mm</th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+    </tr>
+    <tr>
+        <th>transverse_movement_mm</th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+        <th><input type="text" /></th>
+    </tr>
 </table>
 
 <button onclick="callAzureFunctionForAllColumns()">Submit</button>
