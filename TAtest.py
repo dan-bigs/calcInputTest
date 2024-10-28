@@ -11,6 +11,18 @@ HP_pad = True
 HP_sliding = True
 site_temp_min = -5
 
+steel_type = 355
+
+steel_yield_array = [
+    [40, 235, 355],  # thickness, S235, S355J2+N
+    [80, 215, 335],
+    [100, 215, 315],
+    [150, 295, 295],
+    [200, 185, 285],
+    [250, 175, 275],
+    [400, 0, 265]
+]
+
 designs_above_min = 6
 
 if HP_sliding: sliding_press_allow_centric = 90 #MPa
@@ -178,21 +190,29 @@ def design_force_pot_wall(row):
     pot_wall_h_design_force = (ring_tension_force(row) + (rs_plus_fric(row)*ULS_max))/pot_ring_section_area
     #print("friction force of main sliding surface: ",rs_plus_fric(row)*ULS_max)
     #print(pot_wall_h_design_force)
-    return 200 < pot_wall_h_design_force < 250 or pot_wall_h_design_force < 250 and pot_wall_thick == pot_wall[0]
+    #print(pot_wall_thick)
+    return yield_calc(pot_wall_thick) < pot_wall_h_design_force < 1.1 * yield_calc(pot_wall_thick) or pot_wall_h_design_force < yield_calc(pot_wall_thick) and pot_wall_thick == pot_wall[0]
+
+def yield_calc(given_thickness):
+    if steel_type == 355:
+        row = 2
+    else:
+        row = 1
+
+    yield_given_thickness = next((i[row] for i in steel_yield_array if i[0] >= given_thickness), None)
+    #print(yield_given_thickness)
+    return yield_given_thickness
 
 
-filtered_combo3 = np.array([row for row in combo3 if design_force_pot_wall(row)and np.all(row[7] >= pot_wall[0])])
+filtered_combo3 = np.array([row for row in combo3 if design_force_pot_wall(row)])
 
 # Print the filtered matrix
 print("Filtered Matrix with Ring Tension:\n", filtered_combo3)
 print("failing pot walls filtered array Size:", filtered_combo3.shape)
 
 
-#update test
-
-
-
-
+def pot_base_proofs(row):
+    1==1
 
 
 
