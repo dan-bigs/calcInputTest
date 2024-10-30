@@ -25,7 +25,9 @@ dust_seal_h = 10
 
 steel_type = 355
 
-designs_above_min = 8
+designs_above_min = 7
+
+piston_min = 25
 
 #Static assumptions -----------------------
 
@@ -322,13 +324,23 @@ def h_shear_stress_wall(row):
 
 
 filtered_filtered_combo3 = np.array([row for row in filtered_combo3 if h_shear_stress_wall(row)])
-
+combo4 = filtered_filtered_combo3
 # Print the filtered matrix
 # print("Filtered Matrix with Shear Stress:\n", filtered_filtered_combo3)
 print("remove pot walls failing SHEAR STRESS array Size:", filtered_filtered_combo3.shape)
 
+def piston_h(row):
+    pad_dia = row[0]
+    piston_dia = pad_dia
+    piston_h = min(piston_min,0.04*piston_dia)
+    piston_h = pot_piston_contact_h(row)+piston_h
+    return int(np.ceil(piston_h))
 
 
+piston_h_values = np.array([piston_h(row) for row in combo4])
+data_with_piston_h = np.column_stack((combo4, piston_h_values))
+print("piston h added:\n", data_with_piston_h)
+print("piston h added:", data_with_piston_h.shape)
 
 
 def bearing_maker(ULS_max, ULS_min, long_mov, tran_mov, long_rot, tran_rot, HP_pad, HP_sliding, i, j):
