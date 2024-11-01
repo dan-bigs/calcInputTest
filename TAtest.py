@@ -7,7 +7,7 @@ np.set_printoptions(threshold=np.inf) #show an infinite amount in print window
 
 #Inputs -----------------------
 
-ULS_max = 15000000 #N
+ULS_max = 20000000 #N
 long_mov = 150
 tran_mov = 20
 HP_pad = True
@@ -26,6 +26,8 @@ dust_seal_h = 10
 steel_type = 355
 
 designs_above_min = 7
+
+rs_recess = 5.6
 
 piston_min = 25
 
@@ -346,7 +348,7 @@ def piston_h(row):
     pad_dia = row[pad_dia_col]
     piston_dia = pad_dia
     piston_h = min(piston_min,0.04*piston_dia)
-    piston_h = pot_piston_contact_h(row)+piston_h
+    piston_h = pot_piston_contact_h(row)+piston_h+rs_recess
     return int(np.ceil(piston_h))
 
 def weight_check(row):
@@ -410,10 +412,10 @@ sorted_indices = np.argsort(data_with_weight[:, bearing_kg_col])[::1]
 # Reorder the matrix based on these indices
 sorted_matrix = data_with_weight[sorted_indices]
 
-# print("weight sorted:\n", sorted_matrix)
+print("weight sorted:\n", sorted_matrix[0])
 print("weight sorted:", sorted_matrix.shape)
 
-print("\n\nThe smallest bearing weighs:",sorted_matrix[0,11],"kg")
+print("\n\nThe lightest bearing weighs:",sorted_matrix[0,11],"kg")
 print("The pot weighs:",pot_weight(sorted_matrix[0]),"kg")
 print("The piston weighs:",piston_weight(sorted_matrix[0]),"kg")
 print("The sliding plate weighs:",sp_weight(sorted_matrix[0]),"kg\n\n")
