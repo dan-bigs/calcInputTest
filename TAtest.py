@@ -29,7 +29,25 @@ designs_above_min = 7
 
 piston_min = 25
 
+steel_density = .00785 #g/mm3
+steel_density = steel_density/1000 #convert to kg/mm3
+
 #Static assumptions -----------------------
+
+#component positions in the final matrix -----------------------
+pad_dia_col = 0 
+pad_thk_col = 1 
+main_sliding_dia_col = 2 
+stainless_long_col = 3 
+stainless_tran_col = 4 
+sliding_long_col = 5 
+sliding_tran_col = 6
+sliding_thk_col = 7
+pot_wall_thk_col = 8 
+pot_bot_thk_col = 9 
+piston_thk_col = 10
+bearing_kg_col = 11
+#component positions in the final matrix -----------------------
 
 
 # steel_yield_array = [
@@ -100,7 +118,7 @@ sliding_disc_min_dia = sliding_disc_dia_defined_array[sliding_disc_min_dia_posit
 
 # determination of minimum values from the predefined groups END
 
-pot_wall = np.arange(20,200,10)
+pot_wall = np.arange(20,200,5)
 pot_bot = np.arange(12,50,1)
 
 # define arrays for geometry
@@ -119,7 +137,7 @@ pad_dia_h_comb = np.column_stack((pad_dia_array, pad_h_array))
 print("pad dia and h array Size:", pad_dia_h_comb.shape)
 
 
-sliding_disc_dia_array = np.array([disc for disc in sliding_disc_dia_defined_array[sliding_disc_min_dia_position:sliding_disc_min_dia_position + designs_above_min + 4]])
+sliding_disc_dia_array = np.array([disc for disc in sliding_disc_dia_defined_array[sliding_disc_min_dia_position:sliding_disc_min_dia_position + designs_above_min]])
 
 #combo1 = np.kron(pad_dia_h_comb,sliding_disc_dia_array)
 
@@ -150,21 +168,23 @@ filtered_combo1 = np.array([
 # print("Filtered Combinations:\n", filtered_combo1)
 print("filtered to keep pad dia and sliding dia close in size array Size:", filtered_combo1.shape)
 
-sliding_sheet_long = filtered_combo1[:,2]+long_mov+20
+sliding_sheet_long = filtered_combo1[:,2]+long_mov+50
 sliding_plate_long = sliding_sheet_long+20
 
-sliding_sheet_tran = filtered_combo1[:,2]+tran_mov+20
+sliding_sheet_tran = filtered_combo1[:,2]+tran_mov+50
 sliding_plate_tran = sliding_sheet_tran+20
 
-column_add_combo1 = np.column_stack((filtered_combo1, sliding_sheet_long,sliding_sheet_tran,sliding_plate_long,sliding_plate_tran))
+sliding_plate_thk = np.ceil(np.sqrt(sliding_plate_long**2+sliding_plate_tran**2)*.04)
 
-#print("Filtered Combinations:\n", column_add_combo1)
+column_add_combo1 = np.column_stack((filtered_combo1, sliding_sheet_long,sliding_sheet_tran,sliding_plate_long,sliding_plate_tran,sliding_plate_thk))
+
+# print("Filtered Combinations:\n", column_add_combo1)
 print("sliding sheet and plate add array Size:", column_add_combo1.shape)
 
 
 def rs_plus_fric(row):
-    sliding_sheet_dia = row[2]
-    sliding_sheet_area = math.pi*(sliding_sheet_dia/2)**2
+    sliding_mat_dia = row[main_sliding_dia_col]
+    sliding_sheet_area = math.pi*(sliding_mat_dia/2)**2
     centric_press = ULS_max/sliding_sheet_area
     if -50 <= site_temp_min < -35:
         min_fric = 0.035     # Set the minimum fric value
@@ -209,7 +229,7 @@ combo3 = np.vstack(combo3)
 print("pot bot added array Size:", combo3.shape)
 
 def pot_piston_contact_h(row):
-    pad_dia = row[0]
+    pad_dia = row[pad_dia_col]
     piston_dia = pad_dia
     fric_force = rs_plus_fric(row)
     total_h_fric = math.sqrt(fric_force**2+fric_force**2)
@@ -219,8 +239,8 @@ def pot_piston_contact_h(row):
     return total_min_height
 
 def hydrostatic_force(row):
-    pad_thick = row[1]
-    pad_dia = row[0]
+    pad_thick = row[pad_thk_col]
+    pad_dia = row[pad_dia_col]
     piston_dia = pad_dia
     rotation_deflection = ULS_rotation*0.5*piston_dia
     hydrostatic_force_value = (4*ULS_max*(pad_thick+rotation_deflection))/(math.pi*pad_dia)
@@ -228,44 +248,29 @@ def hydrostatic_force(row):
     return hydrostatic_force_value
 
 def pot_wall_interior_height(row):
-    pad_thick = row[1]
+    pad_thick = row[pad_thk_col]
     return pad_thick+pot_piston_contact_h(row)
 
 def design_force_pot_wall(row):
 
-    pot_wall_thick = row[7]
+    pot_wall_thick = row[pot_wall_thk_col]
     # print(pot_wall_thick)
     pot_wall_h = pot_wall_interior_height(row)
-    pot_ring_section_area = pot_wall_h * pot_wall_thick *2
+    pot_ring_section_area = pot_wall_h * pot_wall_thick * 2
     pot_wall_h_design_force = (hydrostatic_force(row) + (rs_plus_fric(row)*ULS_max))/pot_ring_section_area
     #print("friction force of main sliding surface: ",rs_plus_fric(row)*ULS_max)
     # print(pot_wall_thick)
     # print(pot_wall_h_design_force)
     #print(pot_wall_thick)
     # print("pot wall height", pot_wall_h)
-    return yield_calc(pot_wall_thick)*.8 < pot_wall_h_design_force < yield_calc(pot_wall_thick) or pot_wall_h_design_force < yield_calc(pot_wall_thick) and pot_wall_thick == pot_wall[0]
-
-# def yield_calc(given_thickness):
-#     if steel_type == 355:
-#         column = 2 
-#     else:
-#         column = 1
-
-#     matching_row = next((i for i in steel_yield_array if i[0] >= given_thickness), None)/steel_material_safety_factor
-#     yield_given_thickness = matching_row[column]
-#     # matching_rows = steel_yield_array[steel_yield_array['thk'] >= given_thickness]
-
-#     # # Check if there's a match and retrieve the yield strength
-#     # if not matching_rows.empty:
-#     #     yield_given_thickness = matching_rows.iloc[0][column] / steel_material_safety_factor
-#     #     print(yield_given_thickness)
-#     #     return yield_given_thickness
-#     # else:
-#     #     print("yield not found")
-#     #     return None  # Handle the case where no matching thickness is found
-
-#     print(yield_given_thickness)
-#     return yield_given_thickness
+    # print(yield_calc(pot_wall_thick)*.5 < pot_wall_h_design_force < yield_calc(pot_wall_thick)*1.3)
+    wall_yield_pass = pot_wall_h_design_force < yield_calc(pot_wall_thick)*1.3
+    wall_too_thick = pot_wall_h_design_force < yield_calc(pot_wall_thick)*1.3*0.7
+    if wall_too_thick: wall_yield_pass = False
+    if wall_too_thick and pot_wall_thick == pot_wall[0]:
+        return True
+    else: return wall_yield_pass
+    # return yield_calc(pot_wall_thick)*.5 < pot_wall_h_design_force < yield_calc(pot_wall_thick)*1.3
 
 def yield_calc(given_thickness):
     # Determine the correct column based on the steel type
@@ -292,12 +297,20 @@ def yield_calc(given_thickness):
 # print ("tester",test)
 
 def pot_base_disc_tension(row):
-    pot_bot_thick = row[8]
-    pad_dia = row[0]
+    pot_bot_thick = row[pot_bot_thk_col]
+    pad_dia = row[pad_dia_col]
     pot_bot_dia = pad_dia
     base_area = pot_bot_dia * pot_bot_thick
     base_tension = (hydrostatic_force(row) + (rs_plus_fric(row)*ULS_max))/base_area
-    return yield_calc(pot_bot_thick)*.5 < base_tension < yield_calc(pot_bot_thick)
+
+    base_tesion_pass = base_tension < yield_calc(pot_bot_thick)*1.3
+    base_too_thick = base_tension < yield_calc(pot_bot_thick)*1.3*0.7
+    if base_too_thick: base_tesion_pass = False
+    if base_too_thick and pot_bot_thick == pot_bot[0]:
+        return True
+    else:return base_tesion_pass
+    
+    return base_tension < yield_calc(pot_bot_thick)
 
 # test = pot_base_disc_tension(combo3[1])
 # print ("tester",test)
@@ -305,7 +318,7 @@ def pot_base_disc_tension(row):
 combo3 = np.array([row for row in combo3 if pot_base_disc_tension(row)])
 
 # Print the filtered matrix
-# print("Filtered Matrix with Ring Tension:\n", filtered_combo3)
+# print("Filtered Matrix with Ring Tension:\n", combo3)
 print("remove bases failing disc tension:", combo3.shape)
 
 filtered_combo3 = np.array([row for row in combo3 if design_force_pot_wall(row)])
@@ -316,11 +329,11 @@ print("remove pot walls failing RING TENSION array Size:", filtered_combo3.shape
 
 
 def h_shear_stress_wall(row):
-    pot_wall_thick = row[7]
-    pad_dia = row[0]
+    pot_wall_thick = row[pot_wall_thk_col]
+    pad_dia = row[pad_dia_col]
     h_shear_stress = (hydrostatic_force(row) + 1.5*(rs_plus_fric(row)*ULS_max))/(pad_dia*pot_wall_thick/2)/math.sqrt(3)
     #print(h_shear_stress)
-    return yield_calc(pot_wall_thick)*.2 < h_shear_stress < yield_calc(pot_wall_thick)
+    return h_shear_stress < yield_calc(pot_wall_thick)
 
 
 filtered_filtered_combo3 = np.array([row for row in filtered_combo3 if h_shear_stress_wall(row)])
@@ -330,18 +343,80 @@ combo4 = filtered_filtered_combo3
 print("remove pot walls failing SHEAR STRESS array Size:", filtered_filtered_combo3.shape)
 
 def piston_h(row):
-    pad_dia = row[0]
+    pad_dia = row[pad_dia_col]
     piston_dia = pad_dia
     piston_h = min(piston_min,0.04*piston_dia)
     piston_h = pot_piston_contact_h(row)+piston_h
     return int(np.ceil(piston_h))
 
+def weight_check(row):
+    pot_od = row[pad_dia_col]+2*row[pot_wall_thk_col]
+    pot_wall_h = pot_wall_interior_height(row)
+    pot_bot_thk = row[pot_bot_thk_col]
+    pot_total_h = pot_wall_h +  pot_bot_thk
+    piston_dia = row[pad_dia_col]
+    piston_thk = row[piston_thk_col]
+    sp_long = row[sliding_long_col]
+    sp_tran = row[sliding_tran_col]
+    sp_thk = row[sliding_thk_col]
+
+    pot_vol = (math.pi*((pot_od/2)**2)*pot_total_h)-(math.pi*((piston_dia/2)**2)*pot_wall_h)
+    piston_vol = (math.pi*((piston_dia/2)**2)*piston_thk)
+    sp_vol = sp_long*sp_tran*sp_thk
+    total_vol = pot_vol+piston_vol+sp_vol
+    weight = total_vol*steel_density
+    return int(np.ceil(weight))
+
+def pot_weight(row):
+    pot_od = row[pad_dia_col]+2*row[pot_wall_thk_col]
+    pot_wall_h = pot_wall_interior_height(row)
+    pot_bot_thk = row[pot_bot_thk_col]
+    pot_total_h = pot_wall_h +  pot_bot_thk
+    piston_dia = row[pad_dia_col]
+    pot_vol = (math.pi*((pot_od/2)**2)*pot_total_h)-(math.pi*((piston_dia/2)**2)*pot_wall_h)
+    total_vol = pot_vol
+    weight = total_vol*steel_density
+    return int(np.ceil(weight))
+def sp_weight(row):
+    sp_long = row[sliding_long_col]
+    sp_tran = row[sliding_tran_col]
+    sp_thk = row[sliding_thk_col]
+    sp_vol = sp_long*sp_tran*sp_thk
+    total_vol = sp_vol
+    weight = total_vol*steel_density
+    return int(np.ceil(weight))
+def piston_weight(row):
+    piston_dia = row[pad_dia_col]
+    piston_thk = row[piston_thk_col]
+    piston_vol = (math.pi*((piston_dia/2)**2)*piston_thk)
+    total_vol = piston_vol
+    weight = total_vol*steel_density
+    return int(np.ceil(weight))
 
 piston_h_values = np.array([piston_h(row) for row in combo4])
 data_with_piston_h = np.column_stack((combo4, piston_h_values))
-print("piston h added:\n", data_with_piston_h)
+# print("piston h added:\n", data_with_piston_h)
 print("piston h added:", data_with_piston_h.shape)
 
+weight = np.array([weight_check(row) for row in data_with_piston_h])
+data_with_weight = np.column_stack((data_with_piston_h, weight))
+
+# print("weight added:\n", data_with_weight)
+print("weight added:", data_with_weight.shape)
+
+# Get indices of the sorted column in descending order
+sorted_indices = np.argsort(data_with_weight[:, bearing_kg_col])[::1]
+
+# Reorder the matrix based on these indices
+sorted_matrix = data_with_weight[sorted_indices]
+
+# print("weight sorted:\n", sorted_matrix)
+print("weight sorted:", sorted_matrix.shape)
+
+print("\n\nThe smallest bearing weighs:",sorted_matrix[0,11],"kg")
+print("The pot weighs:",pot_weight(sorted_matrix[0]),"kg")
+print("The piston weighs:",piston_weight(sorted_matrix[0]),"kg")
+print("The sliding plate weighs:",sp_weight(sorted_matrix[0]),"kg\n\n")
 
 def bearing_maker(ULS_max, ULS_min, long_mov, tran_mov, long_rot, tran_rot, HP_pad, HP_sliding, i, j):
     ULS_max = 1
