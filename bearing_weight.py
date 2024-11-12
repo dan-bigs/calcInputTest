@@ -47,3 +47,6 @@ def piston_weight(row):
     total_vol = piston_vol
     weight = total_vol*steel_density
     return int(np.ceil(weight))
+
+def lugs_weight(row):
+    1

@@ -12,7 +12,7 @@ def terminal_print(combo,name):
 def rs_plus_fric(row):
     sliding_mat_dia = row[main_sliding_dia_col]
     sliding_sheet_area = math.pi*(sliding_mat_dia/2)**2
-    centric_press = ULS_max/sliding_sheet_area
+    centric_press = max_vert/sliding_sheet_area
     if -50 <= site_temp_min < -35:
         min_fric = 0.035     # Set the minimum fric value
         max_fric = 0.08     # Set the maximum fric value
@@ -74,9 +74,9 @@ def design_moment(row,case,vload):
 def sliding_disc_max_ecc_press(row):
     disc_dia = row[main_sliding_dia_col]
     disc_area = math.pi*(disc_dia/2)**2
-    eccentricity_ULS = design_moment(row,"ULS",ULS_max)/ULS_max
+    eccentricity_ULS = design_moment(row,"ULS",max_vert)/max_vert
     reduced_area = disc_area*(1-0.75*math.pi*eccentricity_ULS/disc_dia)
-    return ULS_max/reduced_area < rs_plus_char_str(site_temp_max)[1]/rs_safety_fact
+    return max_vert/reduced_area < rs_plus_char_str(site_temp_max)[1]/rs_safety_fact
 
 def sp_4percent_rule(sp_lo,sp_tr):
     sp_t = math.ceil(math.sqrt((sp_lo) ** 2 + (sp_tr) ** 2) * 0.04)  # sliding_plate_thk
@@ -90,10 +90,43 @@ def sp_properties(disc_dia,long_mov,tran_mov):
     sp_t = math.ceil(math.sqrt((sp_lo) ** 2 + (sp_tr) ** 2) * 0.04)  # sliding_plate_thk
     return ss_lo,ss_tr,sp_lo,sp_tr,sp_t
 
+
+def lug_builder(row,lug_qty):
+    bolt_sz = row[bolt_sz_col]
+    bolt_qual = row[bolt_qual_col]
+    result = next(filter(
+        lambda row: row[0] == "EN" and row[1] == bolt_sz and row[2] == bolt_qual, lug_thk_min
+        ), None)
+    min_thk = result[-1] if result else None
+    row_qty = 1
+    edge_dist = bolt_sz*lug_edge_factor
+    bolt_sep_dist = bolt_sz*bolt_sep_perp_to_force_factor
+    bolts_per_lug = (np.ceil(bolt_qty(row)/lug_qty))
+    # print("bolts per lug: ",bolts_per_lug)
+    lug_bolt_line_dim = math.ceil(((bolts_per_lug-1)*bolt_sep_dist+2*edge_dist)/5)*5
+    lug_dim_away_from_weld = math.ceil(edge_dist*(row_qty+1)/5)*5
+    # print("l and w: ",lug_bolt_line_dim,lug_dim_away_from_weld)
+    lug_thk = min_thk
+
+    # assuming simple weld stress
+    weld_area = (lug_thk-2)*lug_bolt_line_dim*lug_qty
+    fric_force = max_vert*rs_plus_fric(row)
+    total_h_force_fric = math.sqrt(fric_force**2+fric_force**2)
+    weld_stress = total_h_force_fric/weld_area
+
+    while weld_stress > yield_calc(lug_thk) or lug_thk > 100:
+        lug_thk = lug_thk+5
+        weld_area = (lug_thk-2)*lug_bolt_line_dim*lug_qty
+        weld_stress = total_h_force_fric/weld_area
+        print("weld stress",weld_stress)
+        print ("lug thick",lug_thk)
+
+    return lug_bolt_line_dim,lug_dim_away_from_weld,lug_thk
+
 def pot_piston_contact_h(row):
     pad_dia = row[pad_dia_col]
     piston_dia = pad_dia
-    fric_force = rs_plus_fric(row)
+    fric_force = max_vert*rs_plus_fric(row)
     total_h_fric = math.sqrt(fric_force**2+fric_force**2)
     force_related_h = (1.5*total_h_fric)/(piston_dia*yield_calc(40))
     rotation_deflection = ULS_rotation_tot*0.5*piston_dia
@@ -105,7 +138,7 @@ def hydrostatic_force(row):
     pad_dia = row[pad_dia_col]
     piston_dia = pad_dia
     rotation_deflection = ULS_rotation_tot*0.5*piston_dia
-    hydrostatic_force_value = (4*ULS_max*(pad_thick+rotation_deflection))/(math.pi*pad_dia)
+    hydrostatic_force_value = (4*max_vert*(pad_thick+rotation_deflection))/(math.pi*pad_dia)
     # print(hydrostatic_force_value)
     return hydrostatic_force_value
 
@@ -119,7 +152,7 @@ def design_force_pot_wall(row):
     # print(pot_wall_thick)
     pot_wall_h = pot_wall_interior_height(row)
     pot_ring_section_area = pot_wall_h * pot_wall_thick * 2
-    pot_wall_h_design_force = (hydrostatic_force(row) + (rs_plus_fric(row)*ULS_max))/pot_ring_section_area
+    pot_wall_h_design_force = (hydrostatic_force(row) + (rs_plus_fric(row)*max_vert))/pot_ring_section_area
     wall_yield_pass = pot_wall_h_design_force < yield_calc(pot_wall_thick)*steel_material_safety_factor
     wall_too_thick = pot_wall_h_design_force < yield_calc(pot_wall_thick)*steel_material_safety_factor*0.7
     if wall_too_thick: wall_yield_pass = False
@@ -157,7 +190,7 @@ def pot_base_disc_tension(row):
     pad_dia = row[pad_dia_col]
     pot_bot_dia = pad_dia
     base_area = pot_bot_dia * pot_bot_thick
-    base_tension = (hydrostatic_force(row) + (rs_plus_fric(row)*ULS_max))/base_area
+    base_tension = (hydrostatic_force(row) + (rs_plus_fric(row)*max_vert))/base_area
 
     base_tension_pass = base_tension < yield_calc(pot_bot_thick)*1.3
     base_too_thick = base_tension < yield_calc(pot_bot_thick)*1.3*0.7
@@ -169,7 +202,7 @@ def pot_base_disc_tension(row):
 def h_shear_stress_wall(row):
     pot_wall_thick = row[pot_wall_thk_col]
     pad_dia = row[pad_dia_col]
-    h_shear_stress = (hydrostatic_force(row) + 1.5*(rs_plus_fric(row)*ULS_max))/(pad_dia*pot_wall_thick/2)/math.sqrt(3)
+    h_shear_stress = (hydrostatic_force(row) + 1.5*(rs_plus_fric(row)*max_vert))/(pad_dia*pot_wall_thick/2)/math.sqrt(3)
     #print(h_shear_stress)
     return h_shear_stress < yield_calc(pot_wall_thick)
 
@@ -179,3 +212,18 @@ def piston_h(row):
     piston_h = min(piston_min,0.04*piston_dia)
     piston_h = pot_piston_contact_h(row)+piston_h+sliding_mat_recess
     return int(np.ceil(piston_h))
+
+def bolt_qty(row):
+    fric_coeff = rs_plus_fric(row)
+    fric_force_x = max_vert*fric_coeff
+    fric_force_y = max_vert*fric_coeff
+    fric_force_tot = math.sqrt(fric_force_x**2+fric_force_y**2)/1000
+
+    bolt_cap_row = next(filter(lambda brow: brow[0] == row[bolt_sz_col] and brow[1] == row[bolt_qual_col], bolt_shear_ULS_thread), None)
+    bolt_cap = bolt_cap_row[-1] if bolt_cap_row else None
+
+    qty = np.ceil(fric_force_tot/bolt_cap)
+    return qty
+
+def conc_press(row):
+    lug_diag_length = 1

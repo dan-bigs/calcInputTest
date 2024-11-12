@@ -3,7 +3,7 @@ import math
 
 #Inputs -----------------------
 
-ULS_max = 20000000 #N
+ULS_max_vert = 20000000 #N
 long_mov = 200
 tran_mov = 50
 HP_pad = True
@@ -17,6 +17,12 @@ dust_seal_h = 10
 steel_type = 355
 
 pad_manufacturer = "Ars"
+
+max_press_lower_struct = 50
+max_press_upper_struct = 50
+
+upper_ap = False
+lower_ap = False
 
 #Inputs -----------------------
 
@@ -38,6 +44,8 @@ if HP_pad: char_press_pad = 120 #MPa
 else: char_press_pad = 60 #MPa
 allow_press_pad = char_press_pad/1.3 #Mpa
 
+max_vert = np.max(ULS_max_vert)
+
 #Derived Variables -----------------------
 
 
@@ -57,6 +65,10 @@ min_spacing_ss_to_sp = 20
 pad_disc_diff_floor = 10
 pad_disc_diff_ceil = 70
 
+lug_edge_factor = 1.2
+bolt_sep_parallel_to_force_factor = 2.2
+bolt_sep_perp_to_force_factor = 2.4
+
 #Static assumptions -----------------------
 
 #component positions in the final matrix -----------------------
@@ -71,7 +83,13 @@ sliding_thk_col = 7
 pot_wall_thk_col = 8 
 pot_bot_thk_col = 9 
 piston_thk_col = 10
-bearing_kg_col = 11
+bolt_sz_col = 11
+bolt_qual_col = 12
+bolt_qty_col = 13
+lug_l_col = 14
+lug_w_col = 15
+lug_t_col = 16
+bearing_kg_col = 17
 #component positions in the final matrix -----------------------
 
 steel_yield_tuple = (
@@ -119,6 +137,8 @@ pad_defined_tuple = (
 
 pot_wall = tuple(range(20,200,5))
 pot_bot = tuple(range(12,50,1))
+bolt_qual = (8.8,10.9)
+bolt_size = (12,16,20,24,30,36)
 
 F_values = (
     ("Ars","HP",0.01,0.3,2.65),
@@ -127,3 +147,34 @@ F_values = (
     ("Ars","standard",0.01,0.35,4.69),
     ("maI","standard",0.01,0.31,3.18),
 )
+
+# standard, diameter, material, shear plane, ultimate, lug min
+lug_thk_min = [
+    ("EN", 12, 8.8,10),
+    ("EN", 12, 10.9,10),
+    ("EN", 16, 8.8,10),
+    ("EN", 16, 10.9,10),
+    ("EN", 20, 8.8,12),
+    ("EN", 20, 10.9,12),
+    ("EN", 24, 8.8,12),
+    ("EN", 24, 10.9,15),
+    ("EN", 30, 8.8,15),
+    ("EN", 30, 10.9,20),
+    ("EN", 36, 8.8,15),
+    ("EN", 36, 10.9,20),
+]
+
+bolt_shear_ULS_thread = [
+    (12,8.8,32.4),
+    (12,10.9,33.7),
+    (16,8.8,60.3),
+    (16,10.9,62.8),
+    (20,8.8,94.1),
+    (20,10.9,98),
+    (24,8.8,135.6),
+    (24,10.9,141.2),
+    (30,8.8,215.4),
+    (30,10.9,224.4),
+    (36,8.8,313.7),
+    (36,10.9,326.8),
+]

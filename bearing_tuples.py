@@ -10,7 +10,7 @@ np.set_printoptions(threshold=np.inf) #show an infinite amount in print window
 
 # determination of minimum values of pad and disc dia from the predefined groups ----------------------
 
-pad_min_dia = math.sqrt((ULS_max/allow_press_pad)/3.142)*2
+pad_min_dia = math.sqrt((max_vert/allow_press_pad)/3.142)*2
 pad_min_dia_position = next((i for i, pad in enumerate(pad_defined_tuple) if pad[1] > pad_min_dia), None)
 
 sliding_disc_dia_defined_array = [140,170,200,235,270,300,335,365,400,435,465,500,535,570,600,635,670,705,740,775,805,840]
@@ -97,17 +97,42 @@ terminal_print(walls_passing_shear_stress,"walls_passing_shear_stress")
 
 data_with_piston_h = tuple((*row, piston_h(row)) for row in walls_passing_shear_stress)
 
+
 discs_passing_excentric_press = tuple(row for row in data_with_piston_h if sliding_disc_max_ecc_press(row))
 terminal_print(discs_passing_excentric_press,"discs_passing_excentric_press")
 
 # print(rs_plus_char_str(site_temp_max)[1],"ex press")
 
+bolt_sizes_added = []
+# Repeat each block with the same value from `sliding_disc_dia_array`
+for value in bolt_size:
+    # Add the new value to each pair in `pad_dia_h_comb`
+    repeated_matrix = tuple((*row, value) for row in discs_passing_excentric_press)
+    bolt_sizes_added.extend(repeated_matrix)  # Append all tuples from repeated_matrix to combo1
+terminal_print(bolt_sizes_added,"bolt_sizes_added")
+
+bolt_qual_added = []
+# Repeat each block with the same value from `sliding_disc_dia_array`
+for value in bolt_qual:
+    # Add the new value to each pair in `pad_dia_h_comb`
+    repeated_matrix = tuple((*row, value) for row in bolt_sizes_added)
+    bolt_qual_added.extend(repeated_matrix)  # Append all tuples from repeated_matrix to combo1
+terminal_print(bolt_qual_added,"bolt_qual_added")
+
+bolt_qty_added = tuple((*row, bolt_qty(row)) for row in bolt_qual_added)
+terminal_print(bolt_qty_added,"bolt_qty_added")
+
+
+with_lug_long = tuple((*row, *lug_builder(row,2)) for row in bolt_qty_added)
+
+
+
 # Calculate and stack weight into the tuple
-data_with_weight = tuple((*row, weight_check(row)) for row in discs_passing_excentric_press)
+data_with_weight = tuple((*row, weight_check(row)) for row in with_lug_long)
 
 # Sort the tuple based on the specific column (bearing_kg_col) in ascending order
 sorted_data_with_weight = tuple(
-    row for row in sorted(data_with_weight, key=lambda x: x[bearing_kg_col], reverse=False)
+    row for row in sorted(data_with_weight, key=lambda x: x[-1], reverse=False)
 )
 
 # print(design_moment(sorted_data_with_weight[0],"ULS",ULS_max),"design mom")
@@ -121,7 +146,7 @@ first_row = sorted_data_with_weight[0]
 print("lowest weight bearing dims:", first_row)
 
 # Access specific columns from the first row (adjust indices accordingly)
-print("\n\nThe lightest bearing weighs:", first_row[11], "kg")
+print("\n\nThe lightest bearing weighs:", first_row[-1], "kg")
 print("The pot weighs:", pot_weight(first_row), "kg")
 print("The piston weighs:", piston_weight(first_row), "kg")
 print("The sliding plate weighs:", sp_weight(first_row), "kg\n\n")
