@@ -122,13 +122,23 @@ terminal_print(bolt_qual_added,"bolt_qual_added")
 bolt_qty_added = tuple((*row, bolt_qty(row)) for row in bolt_qual_added)
 terminal_print(bolt_qty_added,"bolt_qty_added")
 
+bolt_qty_considering_max = tuple(row for row in bolt_qty_added if row[bolt_qty_col] <= bolt_qty_max)
+terminal_print(bolt_qty_considering_max,"bolt_qty_considering_max")
 
-with_lug_long = tuple((*row, *lug_builder(row,2)) for row in bolt_qty_added)
+pot_lug_dims_add = tuple((*row, *lug_builder(row,pot_lug_qty)) for row in bolt_qty_considering_max)
+terminal_print(pot_lug_dims_add,"pot_lug_dims_add")
 
+sp_lug_dims_add = tuple((*row, *lug_builder(row,sp_lug_qty)) for row in pot_lug_dims_add)
+terminal_print(sp_lug_dims_add,"sp_lug_dims_add")
+
+anchor_plates_add = tuple((*row, *anchor_plate_builder(row)) for row in sp_lug_dims_add)
+terminal_print(anchor_plates_add,"anchor_plates_add")
 
 
 # Calculate and stack weight into the tuple
-data_with_weight = tuple((*row, weight_check(row)) for row in with_lug_long)
+data_with_weight = tuple((*row, weight_check(row)) for row in anchor_plates_add)
+# for row in data_with_weight:
+#     print(row)
 
 # Sort the tuple based on the specific column (bearing_kg_col) in ascending order
 sorted_data_with_weight = tuple(
@@ -146,10 +156,13 @@ first_row = sorted_data_with_weight[0]
 print("lowest weight bearing dims:", first_row)
 
 # Access specific columns from the first row (adjust indices accordingly)
-print("\n\nThe lightest bearing weighs:", first_row[-1], "kg")
+print("\n\nThe lightest bearing weighs:", first_row[-1], "kg\n")
 print("The pot weighs:", pot_weight(first_row), "kg")
 print("The piston weighs:", piston_weight(first_row), "kg")
-print("The sliding plate weighs:", sp_weight(first_row), "kg\n\n")
+print("The sliding plate weighs:", sp_weight(first_row), "kg")
+print("The lugs in total weigh:", lugs_weight(first_row), "kg")
+print("The anchor plate on the pot side weighs:", ap_weights(first_row)[0], "kg")
+print("The anchor plate on the sliding side weighs:", ap_weights(first_row)[1], "kg\n\n")
 
 
 def bearing_maker(ULS_max, ULS_min, long_mov, tran_mov, long_rot, tran_rot, HP_pad, HP_sliding, i, j):

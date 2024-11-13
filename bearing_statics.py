@@ -90,39 +90,6 @@ def sp_properties(disc_dia,long_mov,tran_mov):
     sp_t = math.ceil(math.sqrt((sp_lo) ** 2 + (sp_tr) ** 2) * 0.04)  # sliding_plate_thk
     return ss_lo,ss_tr,sp_lo,sp_tr,sp_t
 
-
-def lug_builder(row,lug_qty):
-    bolt_sz = row[bolt_sz_col]
-    bolt_qual = row[bolt_qual_col]
-    result = next(filter(
-        lambda row: row[0] == "EN" and row[1] == bolt_sz and row[2] == bolt_qual, lug_thk_min
-        ), None)
-    min_thk = result[-1] if result else None
-    row_qty = 1
-    edge_dist = bolt_sz*lug_edge_factor
-    bolt_sep_dist = bolt_sz*bolt_sep_perp_to_force_factor
-    bolts_per_lug = (np.ceil(bolt_qty(row)/lug_qty))
-    # print("bolts per lug: ",bolts_per_lug)
-    lug_bolt_line_dim = math.ceil(((bolts_per_lug-1)*bolt_sep_dist+2*edge_dist)/5)*5
-    lug_dim_away_from_weld = math.ceil(edge_dist*(row_qty+1)/5)*5
-    # print("l and w: ",lug_bolt_line_dim,lug_dim_away_from_weld)
-    lug_thk = min_thk
-
-    # assuming simple weld stress
-    weld_area = (lug_thk-2)*lug_bolt_line_dim*lug_qty
-    fric_force = max_vert*rs_plus_fric(row)
-    total_h_force_fric = math.sqrt(fric_force**2+fric_force**2)
-    weld_stress = total_h_force_fric/weld_area
-
-    while weld_stress > yield_calc(lug_thk) or lug_thk > 100:
-        lug_thk = lug_thk+5
-        weld_area = (lug_thk-2)*lug_bolt_line_dim*lug_qty
-        weld_stress = total_h_force_fric/weld_area
-        print("weld stress",weld_stress)
-        print ("lug thick",lug_thk)
-
-    return lug_bolt_line_dim,lug_dim_away_from_weld,lug_thk
-
 def pot_piston_contact_h(row):
     pad_dia = row[pad_dia_col]
     piston_dia = pad_dia
@@ -224,6 +191,56 @@ def bolt_qty(row):
 
     qty = np.ceil(fric_force_tot/bolt_cap)
     return qty
+
+def lug_builder(row,lug_qty):
+    bolt_sz = row[bolt_sz_col]
+    bolt_qual = row[bolt_qual_col]
+    result = next(filter(
+        lambda row: row[0] == "EN" and row[1] == bolt_sz and row[2] == bolt_qual, lug_thk_min
+        ), None)
+    min_thk = result[-1] if result else None
+    row_qty = 1
+    edge_dist = bolt_sz*lug_edge_factor
+    bolt_sep_dist = bolt_sz*bolt_sep_perp_to_force_factor
+    bolts_per_lug = (np.ceil(bolt_qty(row)/lug_qty))
+    # print("bolts per lug: ",bolts_per_lug)
+    lug_bolt_line_dim = math.ceil(((bolts_per_lug-1)*bolt_sep_dist+2*edge_dist)/5)*5
+    lug_dim_away_from_weld = math.ceil(edge_dist*(row_qty+1)/5)*5
+    # print("l and w: ",lug_bolt_line_dim,lug_dim_away_from_weld)
+    lug_thk = min_thk
+
+    # assuming simple weld stress
+    weld_area = (lug_thk-2)*lug_bolt_line_dim*lug_qty
+    fric_force = max_vert*rs_plus_fric(row)
+    total_h_force_fric = math.sqrt(fric_force**2+fric_force**2)
+    weld_stress = total_h_force_fric/weld_area
+
+    while weld_stress > yield_calc(lug_thk) or lug_thk > 100:
+        lug_thk = lug_thk+5
+        weld_area = (lug_thk-2)*lug_bolt_line_dim*lug_qty
+        weld_stress = total_h_force_fric/weld_area
+        print("weld stress",weld_stress)
+        print ("lug thick",lug_thk)
+
+    return lug_qty,lug_bolt_line_dim,lug_dim_away_from_weld,lug_thk
+
+def anchor_plate_builder(row):
+    pot_dia = row[pad_dia_col]+2*row[pot_wall_thk_col]
+    pot_ap_length = pot_dia+2*ap_perimeter
+    pot_ap_length = math.ceil(pot_ap_length/5)*5
+    pot_ap_width = pot_dia+2*row[pot_lug_w_col]+2*ap_perimeter
+    pot_ap_width = math.ceil(pot_ap_width/5)*5
+    pot_ap_diag = np.sqrt(pot_ap_length**2+pot_ap_width**2)
+    pot_ap_thk = int(max(15,0.015*pot_ap_diag))
+    
+    sliding_ap_length = row[sliding_long_col]+2*row[sp_lug_w_col]+2*ap_perimeter
+    sliding_ap_length = math.ceil(sliding_ap_length/5)*5
+    sliding_ap_width = row[sliding_tran_col]+2*ap_perimeter
+    sliding_ap_width = math.ceil(sliding_ap_width/5)*5
+    sliding_ap_diag = np.sqrt(sliding_ap_length**2+sliding_ap_width**2)
+    sliding_ap_thk = int(max(15,0.01*sliding_ap_diag))
+
+    return pot_ap_length,pot_ap_width,pot_ap_thk,sliding_ap_length,sliding_ap_width,sliding_ap_thk
 
 def conc_press(row):
     lug_diag_length = 1

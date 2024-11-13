@@ -3,8 +3,8 @@ import math
 
 #Inputs -----------------------
 
-ULS_max_vert = 20000000 #N
-long_mov = 200
+ULS_max_vert = 15000000 #N
+long_mov = 150
 tran_mov = 50
 HP_pad = True
 HP_sliding = True
@@ -21,8 +21,10 @@ pad_manufacturer = "Ars"
 max_press_lower_struct = 50
 max_press_upper_struct = 50
 
-upper_ap = False
-lower_ap = False
+sp_ap_qty = 1
+pot_ap_qty = 1
+
+bolt_qty_max = 14
 
 #Inputs -----------------------
 
@@ -55,6 +57,9 @@ min_contact_h_pot_piston = 5
 steel_material_safety_factor = 1.3
 steel_steel_fric = 0.6
 
+pot_lug_qty = 2
+sp_lug_qty = 2
+
 designs_above_min = 7
 # rs_recess = 5.6
 piston_min = 25
@@ -64,6 +69,8 @@ extra_mov_for_ss = 50
 min_spacing_ss_to_sp = 20
 pad_disc_diff_floor = 10
 pad_disc_diff_ceil = 70
+
+ap_perimeter = 10
 
 lug_edge_factor = 1.2
 bolt_sep_parallel_to_force_factor = 2.2
@@ -86,10 +93,21 @@ piston_thk_col = 10
 bolt_sz_col = 11
 bolt_qual_col = 12
 bolt_qty_col = 13
-lug_l_col = 14
-lug_w_col = 15
-lug_t_col = 16
-bearing_kg_col = 17
+pot_lug_qty_col = 14
+pot_lug_l_col = 15
+pot_lug_w_col = 16
+pot_lug_t_col = 17
+sp_lug_qty_col = 18
+sp_lug_l_col = 19
+sp_lug_w_col = 20
+sp_lug_t_col = 21
+pot_ap_long_col = 22
+pot_ap_tran_col = 23
+pot_ap_t_col = 24
+sp_ap_long_col = 25
+sp_ap_tran_col = 26
+sp_ap_t_col = 27
+bearing_kg_col = 28
 #component positions in the final matrix -----------------------
 
 steel_yield_tuple = (
