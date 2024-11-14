@@ -4,6 +4,9 @@ import itertools
 import pandas as pd
 from bearing_statics import *
 from bearing_weight import *
+import time
+
+start_time = time.time()
 
 np.set_printoptions(threshold=np.inf) #show an infinite amount in print window
 
@@ -134,9 +137,11 @@ terminal_print(sp_lug_dims_add,"sp_lug_dims_add")
 anchor_plates_add = tuple((*row, *anchor_plate_builder(row)) for row in sp_lug_dims_add)
 terminal_print(anchor_plates_add,"anchor_plates_add")
 
+passing_lower_conc_press = tuple(row for row in anchor_plates_add if conc_press_pot(row)<max_press_lower_contact)
+terminal_print(passing_lower_conc_press,"passing_lower_conc_press")
 
 # Calculate and stack weight into the tuple
-data_with_weight = tuple((*row, weight_check(row)) for row in anchor_plates_add)
+data_with_weight = tuple((*row, weight_check(row)) for row in passing_lower_conc_press)
 # for row in data_with_weight:
 #     print(row)
 
@@ -144,6 +149,8 @@ data_with_weight = tuple((*row, weight_check(row)) for row in anchor_plates_add)
 sorted_data_with_weight = tuple(
     row for row in sorted(data_with_weight, key=lambda x: x[-1], reverse=False)
 )
+
+print(conc_press_pot(sorted_data_with_weight[0]),"pot ex press")
 
 # print(design_moment(sorted_data_with_weight[0],"ULS",ULS_max),"design mom")
 
@@ -169,3 +176,7 @@ def bearing_maker(ULS_max, ULS_min, long_mov, tran_mov, long_rot, tran_rot, HP_p
     ULS_max = 1
 # Example call to the function (with dummy values for the parameters)
 bearing_maker(1500, 1000, 0, 0, 0, 0, True, False, 0, 0)
+
+end_time = time.time()
+duration = end_time - start_time
+print(f"Execution Time: {duration:.2f} seconds")

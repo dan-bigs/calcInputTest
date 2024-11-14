@@ -3,12 +3,12 @@ import math
 
 #Inputs -----------------------
 
-ULS_max_vert = 15000000 #N
+ULS_max_vert = 10000000 #N
 long_mov = 150
 tran_mov = 50
 HP_pad = True
 HP_sliding = True
-site_temp_min = -5
+site_temp_min = -30
 site_temp_max = 50
 ULS_rotation_x = 0.001 #rad
 ULS_rotation_y = 0.02 #rad
@@ -18,8 +18,8 @@ steel_type = 355
 
 pad_manufacturer = "Ars"
 
-max_press_lower_struct = 50
-max_press_upper_struct = 50
+max_press_lower_contact = 55
+max_press_upper_contact = 50
 
 sp_ap_qty = 1
 pot_ap_qty = 1

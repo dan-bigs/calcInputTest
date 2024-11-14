@@ -28,7 +28,7 @@ def rs_plus_fric(row):
         max_fric = 0.08     # Set the maximum fric value
         fric = 1.8 / (centric_press + 16)
         fric = max(min_fric, min(fric, max_fric))
-    #print("rsplus fric: ",fric)
+    # print("rsplus fric: ",fric)
     return fric
 
 def rs_plus_char_str(temp):
@@ -97,7 +97,7 @@ def pot_piston_contact_h(row):
     total_h_fric = math.sqrt(fric_force**2+fric_force**2)
     force_related_h = (1.5*total_h_fric)/(piston_dia*yield_calc(40))
     rotation_deflection = ULS_rotation_tot*0.5*piston_dia
-    total_min_height = max(force_related_h + rotation_deflection,min_contact_h_pot_piston)
+    total_min_height = math.ceil(max(force_related_h + rotation_deflection,min_contact_h_pot_piston))
     return total_min_height
 
 def hydrostatic_force(row):
@@ -192,6 +192,13 @@ def bolt_qty(row):
     qty = np.ceil(fric_force_tot/bolt_cap)
     return qty
 
+def h_force_max_fric(row):
+    fric_coeff = rs_plus_fric(row)
+    fric_force_x = fric_coeff*max_vert
+    fric_force_y = fric_force_x
+    fric_force_tot = math.sqrt(fric_force_x**2+fric_force_y**2)
+    return fric_force_tot
+
 def lug_builder(row,lug_qty):
     bolt_sz = row[bolt_sz_col]
     bolt_qual = row[bolt_qual_col]
@@ -242,5 +249,39 @@ def anchor_plate_builder(row):
 
     return pot_ap_length,pot_ap_width,pot_ap_thk,sliding_ap_length,sliding_ap_width,sliding_ap_thk
 
-def conc_press(row):
-    lug_diag_length = 1
+def conc_press_pot(row):
+    pad_dia = row[pad_dia_col]
+    pad_thk = row[pad_thk_col]
+    pot_bot_thk = row[pot_bot_thk_col]
+    pot_wall_thk = row[pot_wall_thk_col]
+    pot_dia = pad_dia+2*pot_wall_thk
+    pot_pist_cont_h = pot_piston_contact_h(row)
+    pot_ap_long = row[pot_ap_long_col]
+    pot_ap_tran = row[pot_ap_tran_col]
+    pot_ap_t = row[pot_ap_t_col]
+    lat_elast_force = 4*max_vert*pad_thk/pad_dia
+    elast_arm = 0.5*(pad_thk+pot_bot_thk)
+    h_load = h_force_max_fric(row)
+    h_load_arm = 0.5*(pad_thk+pot_bot_thk+pot_pist_cont_h)
+
+    if pot_ap_qty > 0:
+        loaded_l = min(pot_ap_long,pot_dia+2*pot_ap_t)
+        loaded_b = min(pot_ap_tran,pot_dia+2*pot_ap_t)
+        eff_plate_width = min(loaded_l,loaded_b)
+    else: eff_plate_width = pot_dia
+    
+    con_react_width = 0.5*eff_plate_width-(0.5*pad_dia+pot_bot_thk+pot_ap_t)
+    conc_react_arm = pot_bot_thk+pot_ap_t+0.5*con_react_width
+
+    elast_ecc_load = lat_elast_force*elast_arm/conc_react_arm
+    h_ecc_load = h_load*h_load_arm/conc_react_arm
+
+    core_conc_load = max_vert-elast_ecc_load-h_ecc_load
+    core_conc_area = (pad_dia+2*pot_bot_thk+2*pot_ap_t)**2*math.pi/4
+    core_press = core_conc_load/core_conc_area
+
+    exc_area = (pot_dia+2*pot_ap_t)**2*math.pi/4-core_conc_area
+    # print(exc_area)
+    exc_press = (elast_ecc_load+4*h_ecc_load)/exc_area
+
+    return exc_press
