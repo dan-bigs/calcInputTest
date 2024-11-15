@@ -3,15 +3,15 @@ import math
 
 #Inputs -----------------------
 
-ULS_max_vert = 10000000 #N
-long_mov = 150
-tran_mov = 50
+ULS_max_vert = 30000000 #N
+long_mov_tot = 150
+tran_mov_tot = 50
 HP_pad = True
 HP_sliding = True
-site_temp_min = -30
+site_temp_min = -25
 site_temp_max = 50
 ULS_rotation_x = 0.001 #rad
-ULS_rotation_y = 0.02 #rad
+ULS_rotation_y = 0.015 #rad
 
 dust_seal_h = 10
 steel_type = 355

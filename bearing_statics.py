@@ -67,7 +67,7 @@ def design_moment(row,case,vload):
     sliding_fricton_force = vload*rs_plus_fric(row)
     sliding_fric_arm = piston_thk+sliding_mat_thk-sliding_mat_recess
     steel_arm = pad_dia/2
-    Mx = pad_restraint_moment(row,case)[0]
+    Mx = pad_restraint_moment(row,case)[0]+sliding_fricton_force*(sliding_fric_arm+(steel_steel_fric*steel_arm))
     My = pad_restraint_moment(row,case)[1]+sliding_fricton_force*(sliding_fric_arm+(steel_steel_fric*steel_arm))
     return math.sqrt(Mx**2+My**2)
 
@@ -77,6 +77,13 @@ def sliding_disc_max_ecc_press(row):
     eccentricity_ULS = design_moment(row,"ULS",max_vert)/max_vert
     reduced_area = disc_area*(1-0.75*math.pi*eccentricity_ULS/disc_dia)
     return max_vert/reduced_area < rs_plus_char_str(site_temp_max)[1]/rs_safety_fact
+
+def sliding_disc_max_ecc_press_check(row):
+    disc_dia = row[main_sliding_dia_col]
+    disc_area = math.pi*(disc_dia/2)**2
+    eccentricity_ULS = design_moment(row,"ULS",max_vert)/max_vert
+    reduced_area = disc_area*(1-0.75*math.pi*eccentricity_ULS/disc_dia)
+    return max_vert/reduced_area
 
 def sp_4percent_rule(sp_lo,sp_tr):
     sp_t = math.ceil(math.sqrt((sp_lo) ** 2 + (sp_tr) ** 2) * 0.04)  # sliding_plate_thk
@@ -95,7 +102,7 @@ def pot_piston_contact_h(row):
     piston_dia = pad_dia
     fric_force = max_vert*rs_plus_fric(row)
     total_h_fric = math.sqrt(fric_force**2+fric_force**2)
-    force_related_h = (1.5*total_h_fric)/(piston_dia*yield_calc(40))
+    force_related_h = (1.5*total_h_fric)/(piston_dia*yield_calc_w_sf(40))
     rotation_deflection = ULS_rotation_tot*0.5*piston_dia
     total_min_height = math.ceil(max(force_related_h + rotation_deflection,min_contact_h_pot_piston))
     return total_min_height
@@ -120,15 +127,15 @@ def design_force_pot_wall(row):
     pot_wall_h = pot_wall_interior_height(row)
     pot_ring_section_area = pot_wall_h * pot_wall_thick * 2
     pot_wall_h_design_force = (hydrostatic_force(row) + (rs_plus_fric(row)*max_vert))/pot_ring_section_area
-    wall_yield_pass = pot_wall_h_design_force < yield_calc(pot_wall_thick)*steel_material_safety_factor
-    wall_too_thick = pot_wall_h_design_force < yield_calc(pot_wall_thick)*steel_material_safety_factor*0.7
+    wall_yield_pass = pot_wall_h_design_force < yield_calc_no_sf(pot_wall_thick)
+    wall_too_thick = pot_wall_h_design_force < yield_calc_no_sf(pot_wall_thick)*0.7
     if wall_too_thick: wall_yield_pass = False
     if wall_too_thick and pot_wall_thick == pot_wall[0]:
         return True
     else: return wall_yield_pass
     # return yield_calc(pot_wall_thick)*.5 < pot_wall_h_design_force < yield_calc(pot_wall_thick)*1.3
 
-def yield_calc(given_thickness):
+def yield_calc_w_sf(given_thickness):
     # Determine the correct column based on the steel type
     if steel_type == 355:
         column = 2  # S355 yield strength
@@ -148,9 +155,19 @@ def yield_calc(given_thickness):
     else:
         # print("No matching thickness found.")
         return None  # Handle the case where no matching thickness is found
+    
+def yield_calc_no_sf(given_thickness):
+    if steel_type == 355:
+        column = 2  # S355 yield strength
+    else:
+        column = 1  # S235 yield strength
+    matching_row = next((i for i in steel_yield_tuple if i[0] >= given_thickness), None)
+    if matching_row is not None:
+        yield_given_thickness = matching_row[column]  # Get the yield strength value
+        return yield_given_thickness
+    else:
+        return None
 
-# test = pot_wall_interior_height(combo3[1])
-# print ("tester",test)
 
 def pot_base_disc_tension(row):
     pot_bot_thick = row[pot_bot_thk_col]
@@ -159,19 +176,27 @@ def pot_base_disc_tension(row):
     base_area = pot_bot_dia * pot_bot_thick
     base_tension = (hydrostatic_force(row) + (rs_plus_fric(row)*max_vert))/base_area
 
-    base_tension_pass = base_tension < yield_calc(pot_bot_thick)*1.3
-    base_too_thick = base_tension < yield_calc(pot_bot_thick)*1.3*0.7
+    base_tension_pass = base_tension < yield_calc_w_sf(pot_bot_thick)
+    base_too_thick = base_tension < yield_calc_w_sf(pot_bot_thick)*0.7
     if base_too_thick: base_tension_pass = False
     if base_too_thick and pot_bot_thick == pot_bot[0]:
         return True
     else:return base_tension_pass
+
+def pot_base_disc_tension_check(row):
+    pot_bot_thick = row[pot_bot_thk_col]
+    pad_dia = row[pad_dia_col]
+    pot_bot_dia = pad_dia
+    base_area = pot_bot_dia * pot_bot_thick
+    base_tension = (hydrostatic_force(row) + (h_force_max_fric(row)))/base_area
+    return base_tension
 
 def h_shear_stress_wall(row):
     pot_wall_thick = row[pot_wall_thk_col]
     pad_dia = row[pad_dia_col]
     h_shear_stress = (hydrostatic_force(row) + 1.5*(rs_plus_fric(row)*max_vert))/(pad_dia*pot_wall_thick/2)/math.sqrt(3)
     #print(h_shear_stress)
-    return h_shear_stress < yield_calc(pot_wall_thick)
+    return h_shear_stress < yield_calc_w_sf(pot_wall_thick)
 
 def piston_h(row):
     pad_dia = row[pad_dia_col]
@@ -222,28 +247,57 @@ def lug_builder(row,lug_qty):
     total_h_force_fric = math.sqrt(fric_force**2+fric_force**2)
     weld_stress = total_h_force_fric/weld_area
 
-    while weld_stress > yield_calc(lug_thk) or lug_thk > 100:
+    while weld_stress > yield_calc_w_sf(lug_thk) or lug_thk > 100:
         lug_thk = lug_thk+5
         weld_area = (lug_thk-2)*lug_bolt_line_dim*lug_qty
         weld_stress = total_h_force_fric/weld_area
-        print("weld stress",weld_stress)
-        print ("lug thick",lug_thk)
+        # print("weld stress",weld_stress)
+        # print ("lug thick",lug_thk)
 
     return lug_qty,lug_bolt_line_dim,lug_dim_away_from_weld,lug_thk
 
 def anchor_plate_builder(row):
     pot_dia = row[pad_dia_col]+2*row[pot_wall_thk_col]
-    pot_ap_length = pot_dia+2*ap_perimeter
-    pot_ap_length = math.ceil(pot_ap_length/5)*5
-    pot_ap_width = pot_dia+2*row[pot_lug_w_col]+2*ap_perimeter
-    pot_ap_width = math.ceil(pot_ap_width/5)*5
+    sliding_dia = row[main_sliding_dia_col]
+    lug_l = row[pot_lug_l_col] # this is the longer dimension of the lug (bolt line)
+    lug_w = row[pot_lug_w_col] # shorter side of lug
+    sp_l = row[sliding_long_col]
+    sp_w = row[sliding_tran_col]
+    sp_lug_l = row[sp_lug_l_col]
+    sp_lug_w = row[sp_lug_w_col]
+    pot_dist_to_corner = 0.5*pot_dia/math.sqrt(2)+lug_w/math.sqrt(2)+0.5*lug_l/math.sqrt(2)
+    sliding_dist_to_corner = 0.5*sliding_dia/math.sqrt(2)+lug_w/math.sqrt(2)+0.5*lug_l/math.sqrt(2)
+    # sliding_ap_length = 0
+    # sliding_ap_width = 0
+
+    if row[pot_lug_qty_col] == 2:
+        pot_ap_length = pot_dia+2*ap_perimeter
+        pot_ap_length = math.ceil(pot_ap_length/5)*5
+        pot_ap_width = pot_dia+2*lug_w+2*ap_perimeter
+        pot_ap_width = math.ceil(pot_ap_width/5)*5
+
+    if row[pot_lug_qty_col] == 4:
+        min_dim = pot_dia + 2*ap_perimeter
+        pot_ap_length = max(min_dim,2*pot_dist_to_corner+2*ap_perimeter)
+        pot_ap_length = math.ceil(pot_ap_length/5)*5
+        pot_ap_width = pot_ap_length
+        pot_ap_width = math.ceil(pot_ap_width/5)*5
+        
     pot_ap_diag = np.sqrt(pot_ap_length**2+pot_ap_width**2)
     pot_ap_thk = int(max(15,0.015*pot_ap_diag))
     
-    sliding_ap_length = row[sliding_long_col]+2*row[sp_lug_w_col]+2*ap_perimeter
-    sliding_ap_length = math.ceil(sliding_ap_length/5)*5
-    sliding_ap_width = row[sliding_tran_col]+2*ap_perimeter
-    sliding_ap_width = math.ceil(sliding_ap_width/5)*5
+    if row[sp_lug_qty_col] == 2:
+        sliding_ap_length = sp_l+2*sp_lug_w+2*ap_perimeter
+        sliding_ap_length = math.ceil(sliding_ap_length/5)*5
+        sliding_ap_width = sp_w+2*ap_perimeter
+        sliding_ap_width = math.ceil(sliding_ap_width/5)*5
+
+    if row[sp_lug_qty_col] == 4:
+        sliding_ap_length = long_mov_tot+extra_mov_for_ss/math.sqrt(2)+2*sliding_dist_to_corner+2*ap_perimeter
+        sliding_ap_length = math.ceil(sliding_ap_length/5)*5
+        sliding_ap_width = tran_mov_tot+extra_mov_for_ss/math.sqrt(2)+2*sliding_dist_to_corner+2*ap_perimeter
+        sliding_ap_width = math.ceil(sliding_ap_width/5)*5
+    
     sliding_ap_diag = np.sqrt(sliding_ap_length**2+sliding_ap_width**2)
     sliding_ap_thk = int(max(15,0.01*sliding_ap_diag))
 
@@ -285,3 +339,19 @@ def conc_press_pot(row):
     exc_press = (elast_ecc_load+4*h_ecc_load)/exc_area
 
     return exc_press
+
+# AASHTO ------------
+# def pot_base_geometry(row):
+#     if pot_ap_qty < 1:
+#         base_min = 20
+#         base_min = max(base_min,0.06*row[pad_dia_col])
+#     else:
+#         base_min = 12.5
+#         base_min = max(base_min,0.04*row[pad_dia_col])
+#     return base_min
+
+# def pot_wall_thk_min(row):
+#     h_force = h_force_max_fric(row)
+#     thk_min = math.sqrt((25*h_force*ULS_rotation_tot)/yield_calc(row[pot_wall_thk_col]))
+#     return thk_min
+# AASHTO ------------
